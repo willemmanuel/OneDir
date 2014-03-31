@@ -56,32 +56,34 @@ def prompt(oneDir):
 
 def mainprompt(oneDir, pathtoonedir):
         """Main prompt once user has logged in"""
-        userInput = raw_input("Please select an option, " + oneDir.user + " logout,exit, get or send")
+        userInput = raw_input("Please select an option, " + oneDir.user + " logout, exit, list, get or send")
         if str.lower(userInput) == 'exit':
             oneDir.logout()
             exit(1)
-        if str.lower(userInput) == 'logout':
+        elif str.lower(userInput) == 'logout':
             oneDir.logout()
             prompt(oneDir)
-        if str.lower(userInput) == 'send':
+        elif str.lower(userInput) == 'send':
             filetosend, pathtosend = getfilename('send')
             if oneDir.sendfile(filetosend, pathtosend) == 1:
                 print "File sent!"
             else:
                 print "Issue sending file"
-        if str.lower(userInput) == 'get':
-            filetosend = getfilename('get')
-            if oneDir.getfile(filetosend) == 1:
-                print "File gotten!"
-            else:
-                print "Issue retrieving file"
+        elif str.lower(userInput) == 'get':
+            filetosend, pathtosend = getfilename('get')
+            oneDir.getfile(pathtosend)
+
+        elif str.lower(userInput) == 'list':
+            oneDir.list()
+
         else:
             print "Please enter a valid option!"
 
 def getfilename(typeoffile):
     """Handles promptin for file names"""
     if typeoffile == 'get':
-        fileinfo = raw_input("Which file would you like to retrieve relative your oneDir directory:")
+        fileinfo = ""
+        pathinfo = raw_input("Which file would you like to get:")
     elif typeoffile == 'send':
         pathinfo = raw_input("Which path in relation to OneDir :")
         fileinfo = raw_input("Which file would you like to send:")

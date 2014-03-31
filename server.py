@@ -143,24 +143,43 @@ def get_file(filename):
     else:
         with open(full_filename, "rb") as in_file:
             read = in_file.read()
-        return '{ "result" : "' + read + '"}'
+        return read
 
-@app.route('/file/<path:p>', methods=['POST'])
+@app.route('/file/<path:path>', methods=['POST'])
 @login_required
-def upload_file(p):
+def upload_file(path):
     file = request.files['file']
-    if not is_safe(p):
+    if not is_safe(path):
         return '{ "result" : -1, "msg" : "unsafe path"}'
     if not file:
         return '{ "result" : -1, "msg" : "file not uploaded"}'
     filename = secure_filename(file.filename)
-    full_path = os.path.join(current_user.get_folder(), p)
+    full_path = os.path.join(current_user.get_folder(), path)
     if not os.path.exists(full_path):
         os.makedirs(full_path)
     full_path = os.path.join(full_path, filename)
     file.save(full_path)
     file_hash = hash_file(full_path)
-    entry = File(current_user.username, file.filename, p, file_hash, datetime.datetime.utcnow())
+    entry = File(current_user.username, file.filename, path, file_hash, datetime.datetime.utcnow())
+    dupe = File.query.filter_by(hash=file_hash, user=current_user).first()
+    if dupe:
+        dupe = entry
+    else:
+        db.session.add(entry)
+    db.session.commit()
+    return '{ "result" : 1, "msg" : "file uploaded"}'
+
+@app.route('/file', methods=['POST'])
+@login_required
+def upload_no_path():
+    file = request.files['file']
+    if not file:
+        return '{ "result" : -1, "msg" : "file not uploaded"}'
+    filename = secure_filename(file.filename)
+    full_path = os.path.join(current_user.get_folder(), filename)
+    file.save(full_path)
+    file_hash = hash_file(full_path)
+    entry = File(current_user.username, file.filename, '/', file_hash, datetime.datetime.utcnow())
     dupe = File.query.filter_by(hash=file_hash, user=current_user).first()
     if dupe:
         dupe = entry
@@ -213,7 +232,7 @@ def is_safe(filename):
 def hash_file(path):
     with open(path, 'rb') as f:
         data = f.read()
-    return hashlib.sha1(data + str(os.stat(path).st_size)).hexdigest()
+    return hashlib.sha1(data + str(os.stat(path).st_size) + str(current_user.username)).hexdigest()
 
 if __name__ == '__main__':
     # manager.run()

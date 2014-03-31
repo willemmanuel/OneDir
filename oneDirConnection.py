@@ -8,7 +8,7 @@ class OneDirConnection:
     def __init__(self, host):
         """Constructor which setsup the host the server is at"""
         self.host = host
-        self.cookie = None
+        self.cookies = None
         self.user = None
         home = expanduser("~")
         self.onedirrectory = '/Users/Will/Desktop/client/'
@@ -20,7 +20,6 @@ class OneDirConnection:
         data = {'username': username, 'password': password, 'email': email}
         headers = {'Content-Type': 'application/json'}
         results = requests.post(url, data=json.dumps(data), headers=headers)
-        print results
         #If it returns username it worked otherwise we have an issue. Update with more pertinent data once server works for me
         if results.json()['result'] == username:
             return 1
@@ -40,11 +39,11 @@ class OneDirConnection:
         else:
             return -1
 
-    def sendfile(self, path, file):
+    def sendfile(self, file, path):
         """Sends a file to the OneDir server using the internal cookie stored inside"""
         print path
-        url = self.host + 'file/'
-        results = requests.post(url,  files={'file': open(join(self.onedirrectory + path + file), 'rb')}, cookies=self.cookies)
+        url = self.host + 'file/' + path
+        results = requests.post(url,  files={'file': open(file, 'rb')}, cookies=self.cookies)
         print results.text
         if results.json()['result'] == -1:
             return -1
@@ -53,12 +52,15 @@ class OneDirConnection:
 
     def getfile(self, path):
         """Gets a file from the OneDir server using the internal cookie stored inside"""
-        url = self.host + 'file' + path
-        results = requests.get(url, cookies=self.cookie)
-        if results.json()['result'] == -1:
-            return -1
-        else:
-            return 1
+        url = self.host + 'file/' + path
+        print url
+        results = requests.get(url, cookies=self.cookies)
+        print results.text
+
+    def list(self):
+        url = self.host + 'list'
+        results = requests.get(url, cookies=self.cookies)
+        print results.text
 
     def logout(self):
         """Logout from the oneDir api server"""
