@@ -22,7 +22,6 @@ def register(oneDir):
         else:
             print "Please try again:"
 
-
 def login(oneDir):
     """Handles individual login interactions"""
     print "You selected login. Please enter exit to quit:"
@@ -30,14 +29,13 @@ def login(oneDir):
     if(str.lower(username) == 'exit'):
             exit(1)
     password = raw_input("Please enter your password")
-    result = oneDir(username,password)
+    result = oneDir.login(username, password)
     if result == 1:
         print "Thank you for logging in!"
         return True
     else:
         print "Issues logging in. Please try again, " + username
         return False
-
 
 def prompt(oneDir):
     """Prompt to handle initial login/registration"""
@@ -56,7 +54,6 @@ def prompt(oneDir):
         if success:
             return
 
-
 def mainprompt(oneDir, pathtoonedir):
         """Main prompt once user has logged in"""
         userInput = raw_input("Please select an option, " + oneDir.user + " logout,exit, get or send")
@@ -67,8 +64,8 @@ def mainprompt(oneDir, pathtoonedir):
             oneDir.logout()
             prompt(oneDir)
         if str.lower(userInput) == 'send':
-            filetosend = getfilename('send')
-            if oneDir.sendfile(filetosend) == 1:
+            filetosend, pathtosend = getfilename('send')
+            if oneDir.sendfile(filetosend, pathtosend) == 1:
                 print "File sent!"
             else:
                 print "Issue sending file"
@@ -81,22 +78,21 @@ def mainprompt(oneDir, pathtoonedir):
         else:
             print "Please enter a valid option!"
 
-
 def getfilename(typeoffile):
     """Handles promptin for file names"""
     if typeoffile == 'get':
         fileinfo = raw_input("Which file would you like to retrieve relative your oneDir directory:")
     elif typeoffile == 'send':
-        fileinfo = raw_input("Which file would you like to send relative  to your oneDir directory:")
-    return fileinfo
-
+        pathinfo = raw_input("Which path in relation to OneDir :")
+        fileinfo = raw_input("Which file would you like to send:")
+    return fileinfo, pathinfo
 
 def main():
     #host we're connecting to localhost for server on same machine
     host = 'http://127.0.0.1:5000/'
     client = OneDirConnection(host)
     home = expanduser("~")
-    oneDir = os.path.join(home, "oneDir")
+    oneDir = '/Users/Will/Desktop/client/'
     prompt(client)
     #we are logged in now and the OneDirConnection has an internal cookie
     while True:

@@ -11,8 +11,7 @@ class OneDirConnection:
         self.cookie = None
         self.user = None
         home = expanduser("~")
-        self.onedirrectory = join(home, "oneDir")
-
+        self.onedirrectory = '/Users/Will/Desktop/client/'
 
     def register(self, username ,password, email):
         """Register the given username , password and email with the oneDir server"""
@@ -21,7 +20,7 @@ class OneDirConnection:
         data = {'username': username, 'password': password, 'email': email}
         headers = {'Content-Type': 'application/json'}
         results = requests.post(url, data=json.dumps(data), headers=headers)
-
+        print results
         #If it returns username it worked otherwise we have an issue. Update with more pertinent data once server works for me
         if results.json()['result'] == username:
             return 1
@@ -35,16 +34,18 @@ class OneDirConnection:
         headers = {'Content-Type': 'application/json'}
         results = requests.post(url, data=json.dumps(data), headers=headers)
         self.cookies = results.cookies
-        if results.json()['result'] == 1:
+        if results.json()['result'] == username:
             self.user = username
             return 1
         else:
             return -1
 
-    def sendfile(self, path):
+    def sendfile(self, path, file):
         """Sends a file to the OneDir server using the internal cookie stored inside"""
-        url = self.host + 'file' + path
-        results = requests.post(url,  files={'file': open(join(self.onedirrectory + path), 'rb')}, cookies=self.cookies)
+        print path
+        url = self.host + 'file/'
+        results = requests.post(url,  files={'file': open(join(self.onedirrectory + path + file), 'rb')}, cookies=self.cookies)
+        print results.text
         if results.json()['result'] == -1:
             return -1
         else:
@@ -69,4 +70,3 @@ class OneDirConnection:
             return 1
         else:
             return -1
-
