@@ -123,8 +123,8 @@ def list():
     for f in files:
         if not first:
             json_string += ","
-        json_string += '{"username":"' + str(f.username) + '", "name":' + str(f.name) + '", "path":' +\
-                       str(f.path) + '", "hash":' + str(f.hash) + '", "modified":' + str(f.modified) + '"}'
+        json_string += '{"username":"' + str(f.username) + '", "name":"' + str(f.name) + '", "path":"' +\
+                       str(f.path) + '", "hash":"' + str(f.hash) + '", "modified":"' + str(f.modified) + '"}'
         first = False
     json_string += "]}"
     return json_string

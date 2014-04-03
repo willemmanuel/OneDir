@@ -1,5 +1,6 @@
 import requests
 import json
+import os
 from os.path import join,expanduser
 
 class OneDirConnection:
@@ -50,17 +51,17 @@ class OneDirConnection:
         else:
             return 1
 
-    def getfile(self, path):
+    def getfile(self, file):
         """Gets a file from the OneDir server using the internal cookie stored inside"""
+        path = os.path.join(file['path'], file['name'])
         url = self.host + 'file/' + path
-        print url
         results = requests.get(url, cookies=self.cookies)
-        print results.text
+        return results.text
 
     def list(self):
         url = self.host + 'list'
         results = requests.get(url, cookies=self.cookies)
-        return results.text
+        return json.loads(results.text)['files']
 
     def logout(self):
         """Logout from the oneDir api server"""

@@ -1,6 +1,7 @@
 import requests
 import json
 from os.path import join,expanduser
+import os
 from Queue import Queue
 import oneDirConnection
 import hashlib
@@ -16,34 +17,41 @@ class Broker:
         self.onedirrectory = '/Users/Will/Desktop/client/'
         self.host = host
         self.connection = oneDirConnection.OneDirConnection(host)
-        if self.connection.login(user, password) != user:
+        if self.connection.login(user, password) != 1:
             raise Exception
         self.list = None
         self.full_sync()
 
-#
-    #
-    # sin(theta) = 1.22 * wavelength / diameter
-    # wavelentgh = wavelength light / vitrus humor
-    #
-    #
-    #
-
-    # for file in onedir:
-    #   if f not in list():
-    #    post
-    #   if f in list but metadata missing:
-    #    out of date post, moved post, etc
-    #   if in list but not onedir
-    #    pull
-
     def full_sync(self):
-        self.list = json.dumps(self.connection.list())
-        # for f in self.list:
+        self.list = self.connection.list()
+        self.synced = []
+        for f in self.list:
+            path = os.path.join(self.onedirrectory, f['path'])
+            if not os.path.exists(path):
+                os.makedirs(path)
+            if not self.exists(f):
+                data = self.connection.getfile(f)
+                new_file = open(self.make_path(f), 'a')
+                new_file.write(data)
+            elif self.hash_file(f) != f['hash']:
+                self.connection.sendfile(f)
+            self.synced.append(self.make_path(f))
+        for root, dirs, files in os.walk(self.onedirrectory):
+            print root, dirs, files
 
-
-
-    def hash_file(self, path):
+    def hash_file(self, file):
+        path = os.path.join(self.onedirrectory, file['path'], file['name'])
         with open(path, 'rb') as f:
             data = f.read()
         return hashlib.sha1(data + str(os.stat(path).st_size) + str(self.user)).hexdigest()
+
+    def make_path(self, file):
+        return str(os.path.join(self.onedirrectory, file['path'], file['name']))
+
+    def exists(self, file):
+        return os.path.isfile(self.make_path(file))
+
+def main():
+    x = Broker("http://127.0.0.1:5000/", "OneDir", "test")
+
+main()
