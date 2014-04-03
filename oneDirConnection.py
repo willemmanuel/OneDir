@@ -20,7 +20,7 @@ class OneDirConnection:
         data = {'username': username, 'password': password, 'email': email}
         headers = {'Content-Type': 'application/json'}
         results = requests.post(url, data=json.dumps(data), headers=headers)
-        #If it returns username it worked otherwise we have an issue. Update with more pertinent data once server works for me
+        # If it returns username it worked otherwise we have an issue. Update with more pertinent data once server works for me
         if results.json()['result'] == username:
             return 1
         else:
@@ -60,7 +60,7 @@ class OneDirConnection:
     def list(self):
         url = self.host + 'list'
         results = requests.get(url, cookies=self.cookies)
-        print results.text
+        return results.text
 
     def logout(self):
         """Logout from the oneDir api server"""
