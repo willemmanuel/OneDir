@@ -2,7 +2,6 @@ import requests
 import json
 from os.path import join,expanduser
 import os
-from Queue import Queue
 import oneDirConnection
 import hashlib
 import os
@@ -13,7 +12,6 @@ class Broker:
         """Constructor which sets up the host the server is at"""
         self.user = user
         home = expanduser("~")
-        self.q = Queue()
         self.onedirrectory = '/Users/Will/Desktop/client/'
         self.host = host
         self.connection = oneDirConnection.OneDirConnection(host)
@@ -25,25 +23,37 @@ class Broker:
     def full_sync(self):
         self.list = self.connection.list()
         self.synced = []
-        for f in self.list:
-            path = os.path.join(self.onedirrectory, f['path'])
-            if not os.path.exists(path):
-                os.makedirs(path)
-            if not self.exists(f):
-                data = self.connection.getfile(f)
-                new_file = open(self.make_path(f), 'a')
-                new_file.write(data)
-            elif self.hash_file(f) != f['hash']:
-                self.connection.sendfile(f)
-            self.synced.append(self.make_path(f))
-        for root, dirs, files in os.walk(self.onedirrectory):
-            print root, dirs, files
+        if self.list:
+            for f in self.list:
+                path = os.path.join(self.onedirrectory, f['path'])
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                if not self.exists(f):
+                    data = self.connection.getfile(f)
+                    new_file = open(self.make_path(f), 'a')
+                    new_file.write(data)
+                    new_file.close()
+                elif str(self.hash_file(f)) != str(f['hash']):
+                    self.connection.sendfile(f['name'], f['path'])
+                if self.make_path(f) not in self.synced:
+                    self.synced.append(self.make_path(f))
+        os_walk = os.walk(self.onedirrectory)
+        for directory in os_walk:
+            for f in directory[2]:
+                if f.startswith('.'):
+                    continue
+                path = os.path.join(directory[0], f)
+                if path not in self.synced:
+                    d = directory[0].replace(self.onedirrectory, "")
+                    self.connection.sendfile(f, d)
+                    self.synced.append(path)
 
     def hash_file(self, file):
         path = os.path.join(self.onedirrectory, file['path'], file['name'])
         with open(path, 'rb') as f:
             data = f.read()
-        return hashlib.sha1(data + str(os.stat(path).st_size) + str(self.user)).hexdigest()
+        input = str(data) + str(os.stat(path).st_size) + str(self.user)
+        return hashlib.sha1(str(input)).hexdigest()
 
     def make_path(self, file):
         return str(os.path.join(self.onedirrectory, file['path'], file['name']))

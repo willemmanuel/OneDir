@@ -1,7 +1,8 @@
 import requests
 import json
 import os
-from os.path import join,expanduser
+from os.path import join, expanduser
+from Queue import Queue
 
 class OneDirConnection:
     """Class to facilitate managing network communication between the oneDir client and server."""
@@ -13,6 +14,7 @@ class OneDirConnection:
         self.user = None
         home = expanduser("~")
         self.onedirrectory = '/Users/Will/Desktop/client/'
+        self.q = Queue()
 
     def register(self, username ,password, email):
         """Register the given username , password and email with the oneDir server"""
@@ -42,8 +44,9 @@ class OneDirConnection:
 
     def sendfile(self, file, path):
         """Sends a file to the OneDir server using the internal cookie stored inside"""
-        print path
         url = self.host + 'file/' + path
+        print url
+        file = os.path.join(self.onedirrectory, path, file)
         results = requests.post(url,  files={'file': open(file, 'rb')}, cookies=self.cookies)
         print results.text
         if results.json()['result'] == -1:
@@ -61,7 +64,10 @@ class OneDirConnection:
     def list(self):
         url = self.host + 'list'
         results = requests.get(url, cookies=self.cookies)
-        return json.loads(results.text)['files']
+        try:
+            return json.loads(results.text)['files']
+        except:
+            return None
 
     def logout(self):
         """Logout from the oneDir api server"""

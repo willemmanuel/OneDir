@@ -232,7 +232,8 @@ def is_safe(filename):
 def hash_file(path):
     with open(path, 'rb') as f:
         data = f.read()
-    return hashlib.sha1(data + str(os.stat(path).st_size) + str(current_user.username)).hexdigest()
+    input = str(data) + str(os.stat(path).st_size) + str(current_user.username)
+    return str(hashlib.sha1(str(input)).hexdigest())
 
 if __name__ == '__main__':
     # manager.run()
