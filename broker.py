@@ -25,14 +25,17 @@ class Broker:
         self.synced = []
         if self.list:
             for f in self.list:
-                path = os.path.join(self.onedirrectory, f['path'])
+                if f['path'] == '/':
+                    path = self.onedirrectory
+                else:
+                    path = os.path.join(self.onedirrectory, f['path'])
                 if not os.path.exists(path):
                     os.makedirs(path)
                 if not self.exists(f):
                     data = self.connection.getfile(f)
-                    new_file = open(self.make_path(f), 'a')
-                    new_file.write(data)
-                    new_file.close()
+                    with open(self.make_path(f), 'a') as new_file:
+                        new_file.write(data)
+                        new_file.close()
                 elif str(self.hash_file(f)) != str(f['hash']):
                     self.connection.sendfile(f['name'], f['path'])
                 if self.make_path(f) not in self.synced:
@@ -49,13 +52,18 @@ class Broker:
                     self.synced.append(path)
 
     def hash_file(self, file):
-        path = os.path.join(self.onedirrectory, file['path'], file['name'])
+        if file['path'] == '/':
+            path = os.path.join(self.onedirrectory, file['name'])
+        else:
+            path = os.path.join(self.onedirrectory, file['path'], file['name'])
         with open(path, 'rb') as f:
             data = f.read()
         input = str(data) + str(os.stat(path).st_size) + str(self.user)
         return hashlib.sha1(str(input)).hexdigest()
 
     def make_path(self, file):
+        if file['path'] == '/':
+            return str(os.path.join(self.onedirrectory, file['name']))
         return str(os.path.join(self.onedirrectory, file['path'], file['name']))
 
     def exists(self, file):

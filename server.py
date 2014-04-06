@@ -77,7 +77,7 @@ class File(db.Model):
     username = db.Column('username',db.String(20), ForeignKey("users.username"))
     name = db.Column('name', db.String(30), primary_key=True)
     path = db.Column('path', db.String(128), primary_key=True)
-    hash = db.Column('hash', db.String(40), primary_key=True)
+    hash = db.Column('hash', db.String(40))
     modified = db.Column('modified', db.DateTime)
 
     def __init__(self, username , name, path, hash, modified):
@@ -161,15 +161,14 @@ def upload_file(path):
     file.save(full_path)
     file_hash = hash_file(full_path)
     entry = File(current_user.username, file.filename, path, file_hash, datetime.datetime.utcnow())
-    dupe = File.query.filter_by(hash=file_hash, user=current_user).first()
+    dupe = File.query.filter_by(user=current_user, path=path, name=filename).first()
     if dupe:
-        dupe = entry
-    else:
-        db.session.add(entry)
+        db.session.delete(dupe)
+    db.session.add(entry)
     db.session.commit()
     return '{ "result" : 1, "msg" : "file uploaded"}'
 
-@app.route('/file/', methods=['POST'])
+@app.route('/file', methods=['POST'])
 @login_required
 def upload_no_path():
     file = request.files['file']
@@ -180,11 +179,10 @@ def upload_no_path():
     file.save(full_path)
     file_hash = hash_file(full_path)
     entry = File(current_user.username, file.filename, '/', file_hash, datetime.datetime.utcnow())
-    dupe = File.query.filter_by(path='', user=current_user).first()
+    dupe = File.query.filter_by(user=current_user, path='/', name=filename).first()
     if dupe:
-        dupe = entry
-    else:
-        db.session.add(entry)
+        db.session.delete(dupe)
+    db.session.add(entry)
     db.session.commit()
     return '{ "result" : 1, "msg" : "file uploaded"}'
 

@@ -44,11 +44,13 @@ class OneDirConnection:
 
     def sendfile(self, file, path):
         """Sends a file to the OneDir server using the internal cookie stored inside"""
-        url = self.host + 'file/' + path
-        print url
-        file = os.path.join(self.onedirrectory, path, file)
+        if path == "" or path == "/":
+            url = self.host + 'file'
+            file = os.path.join(self.onedirrectory, file)
+        else:
+            url = self.host + 'file/' + path
+            file = os.path.join(self.onedirrectory, path, file)
         results = requests.post(url,  files={'file': open(file, 'rb')}, cookies=self.cookies)
-        print results.text
         if results.json()['result'] == -1:
             return -1
         else:
