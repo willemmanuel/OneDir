@@ -25,8 +25,8 @@ import datetime
 #
 app = Flask(__name__)
 app.secret_key = 'super-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Will/test.db'
-UPLOAD_FOLDER = '/Users/Will/Desktop/uploads'
+app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///C:\\Users\\christopher\\oneDir\\test.db"
+UPLOAD_FOLDER = 'C:\Users\christopher\oneDir\oneDir'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
 
