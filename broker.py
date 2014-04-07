@@ -5,14 +5,15 @@ import os
 import oneDirConnection
 import hashlib
 import os
+import time
 import json
 
 class Broker:
-    def __init__(self, host, user, password):
+    def __init__(self, host, user, password, onedir):
         """Constructor which sets up the host the server is at"""
         self.user = user
         home = expanduser("~")
-        self.onedirrectory = '/Users/Will/Desktop/client/'
+        self.onedirrectory = onedir
         self.host = host
         self.connection = oneDirConnection.OneDirConnection(host)
         if self.connection.login(user, password) != 1:
@@ -70,6 +71,16 @@ class Broker:
         return os.path.isfile(self.make_path(file))
 
 def main():
-    x = Broker("http://127.0.0.1:5000/", "OneDir", "test")
+    # For demoing
+    # server = raw_input("Server address: ")
+    # user = raw_input("Username: ")
+    # password = raw_input("Password: ")
+    # onedir = raw_input("OneDir: ")
+    # x = Broker(server, user, password, onedir)
+
+    x = Broker("http://127.0.0.1:5000/", "OneDir", 'test', '/Users/Will/Desktop/client')
+    while True:
+        time.sleep(10)
+        x.full_sync()
 
 main()

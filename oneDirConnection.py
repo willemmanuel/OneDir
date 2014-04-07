@@ -14,7 +14,6 @@ class OneDirConnection:
         self.user = None
         home = expanduser("~")
         self.onedirrectory = '/Users/Will/Desktop/client/'
-        self.q = Queue()
 
     def register(self, username ,password, email):
         """Register the given username , password and email with the oneDir server"""
@@ -58,7 +57,10 @@ class OneDirConnection:
 
     def getfile(self, file):
         """Gets a file from the OneDir server using the internal cookie stored inside"""
-        path = os.path.join(file['path'], file['name'])
+        if file['path'] == '' or file['path'] == '/':
+            path = os.path.join(file['name'])
+        else:
+            path = os.path.join(file['path'], file['name'])
         url = self.host + 'file/' + path
         results = requests.get(url, cookies=self.cookies)
         return results.text
