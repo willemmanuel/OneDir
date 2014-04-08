@@ -8,10 +8,9 @@ from os.path import expanduser
 from oneDirConnection import OneDirConnection
 import watchdog
 import sys
-import time
-import logging
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler
+from watchdog_client import myEventHandler
 def register(oneDir):
         """Handles registration interactions with the user"""
         print "You selected register. Please enter exit to quit or login to try to login:"
@@ -96,19 +95,18 @@ def getfilename(typeoffile):
 def main():
     #host we're connecting to localhost for server on same machine
     host = 'http://127.0.0.1:5000/'
-    client = OneDirConnection(host)
+    #setup default onedir path
     home = expanduser("~")
     oneDir = os.path.join(home,'onedir')
     print oneDir
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
-    event_handler = LoggingEventHandler()
+    client = OneDirConnection(host,oneDir)
+    #Watchdog setup:
+    event_handler = myEventHandler(client)
     observer = Observer()
-    observer.schedule(event_handler, oneDir, recursive=False)
+    observer.schedule(event_handler, oneDir, recursive=True)
     observer.start()
     prompt(client)
-    #we are logdoe# ged in now and the OneDirConnection has an internal cookie
+    #we are logdged in now and the OneDirConnection has an internal cookie
     while True:
         mainprompt(client, oneDir)
 if __name__ == '__main__':

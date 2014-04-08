@@ -7,14 +7,17 @@ from Queue import Queue
 class OneDirConnection:
     """Class to facilitate managing network communication between the oneDir client and server."""
 
-    def __init__(self, host):
+    def __init__(self, host,direct):
         """Constructor which setsup the host the server is at"""
         self.host = host
         self.cookies = None
         self.user = None
         home = expanduser("~")
-        self.onedirrectory = '/Users/Will/Desktop/client/'
+        self.onedirrectory = direct
 
+    def getonedirrectory(self):
+        """ask for the current onedir directory location for the user using this connection"""
+        return self.onedirrectory
     def register(self, username ,password, email):
         """Register the given username , password and email with the oneDir server"""
         #build the request to send.
@@ -49,6 +52,7 @@ class OneDirConnection:
         else:
             url = self.host + 'file/' + path
             file = os.path.join(self.onedirrectory, path, file)
+        #print file
         results = requests.post(url,  files={'file': open(file, 'rb')}, cookies=self.cookies)
         if results.json()['result'] == -1:
             return -1
