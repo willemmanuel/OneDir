@@ -26,17 +26,6 @@ class myEventHandler(FileSystemEventHandler):
         """Defines the destination folder to mimic changes in the source folder and copies the initial contents of the
             source folder over"""
         super(myEventHandler,self).__init__()
-        user = getpass.getuser()
-        self.path = '/home/' + user + '/testfolder/copiedTo'
-        #Delete the copiedTo folder if it already exists and replace with contents of the source folder
-        try:
-            if os.path.exists(self.path):
-                shutil.rmtree(self.path)
-        except OSError as exception:
-            print "Issue deleting directory copiedTo"
-            exit(1)
-        shutil.copytree('/home/' + user + '/testfolder/testdir',self.path)
-
     def on_created(self, event):
         """Handles the creation of new files in the source directory"""
         super(myEventHandler,self).on_created(event)
@@ -54,7 +43,7 @@ class myEventHandler(FileSystemEventHandler):
             try:
                 print source
                 print destination
-                shutil.copyfile(source,destination)
+                stuff.
             except OSError as e:
                     print "Error copying file! " + e.strerror
                     exit(1)
@@ -81,6 +70,7 @@ class myEventHandler(FileSystemEventHandler):
             except OSError as e:
                 print "Error copying file! " + e
                 exit(1)
+    """
     def on_deleted(self, event):
         """Method to handle the deleting of files and directories in the source folder"""
         super(myEventHandler,self).on_deleted(event)
@@ -113,3 +103,4 @@ class myEventHandler(FileSystemEventHandler):
             except OSError as e:
                 print "Error copying file! " + e
                 exit(1)
+    """
