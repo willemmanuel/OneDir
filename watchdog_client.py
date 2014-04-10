@@ -32,32 +32,32 @@ class myEventHandler(FileSystemEventHandler):
         """Handles the creation of new files in the source directory"""
         super(myEventHandler,self).on_created(event)
         #not syncing empty directories serverside atm
-        """
-        if event.is_directory:
-            try:
-                os.makedirs(copyTo)
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise
-        else: """
+        if self.onedir.cookies is None:
+            return
 
-        source = event.src_path
-        try:
-            #use os.path.split to get file name and path
-            splitpath = split(source)
-            file = splitpath[1]
-            pathtoonedir = self.onedir.getonedirrectory()
-            print pathtoonedir
-            print splitpath[0]
-            print "truncated path:"
-            print splitpath[0].replace(pathtoonedir ,"")
-            relapath = ""
-            relpath =""
-            self.onedir.sendfile(file,relpath)
-        except OSError as e:
+        if event.is_directory:
+            pass
+            #try:
+            #    os.makedirs(copyTo)
+            #except OSError as e:
+             #   if e.errno != errno.EEXIST:
+              #      raise
+        else:
+            source = event.src_path
+            try:
+                #use os.path.split to get file name and path
+                splitpath = split(source)
+                file = splitpath[1]
+                pathtoonedir = self.onedir.getonedirrectory()
+                #print pathtoonedir
+                #print splitpath[0]
+                #print "truncated path:"
+                relpath =  splitpath[0].replace(pathtoonedir ,"")
+                self.onedir.sendfile(file, relpath)
+            except OSError as e:
                     print "Error copying file! " + e.strerror
                     exit(1)
-        except IOError as e:
+            except IOError as e:
                     print "IOerror creating file " + e.strerror
                     exit(1)
     """

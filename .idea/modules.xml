@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/OneDir.iml" filepath="$PROJECT_DIR$/.idea/OneDir.iml" />
+      <module fileurl="file://$USER_HOME$/PycharmProjects/minecdemo/.idea/minecdemo.iml" filepath="$USER_HOME$/PycharmProjects/minecdemo/.idea/minecdemo.iml" />
       <module fileurl="file://$USER_HOME$/PycharmProjects/tester/.idea/tester.iml" filepath="$USER_HOME$/PycharmProjects/tester/.idea/tester.iml" />
     </modules>
   </component>

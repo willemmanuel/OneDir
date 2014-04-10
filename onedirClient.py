@@ -78,7 +78,6 @@ def mainprompt(oneDir, pathtoonedir):
 
         elif str.lower(userInput) == 'list':
             oneDir.list()
-
         else:
             print "Please enter a valid option!"
 
@@ -98,7 +97,6 @@ def main():
     #setup default onedir path
     home = expanduser("~")
     oneDir = os.path.join(home,'onedir')
-    print oneDir
     client = OneDirConnection(host,oneDir)
     #Watchdog setup:
     event_handler = myEventHandler(client)

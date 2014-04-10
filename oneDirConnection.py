@@ -3,18 +3,17 @@ import json
 import os
 from os.path import join, expanduser
 from Queue import Queue
-
+import re
 class OneDirConnection:
     """Class to facilitate managing network communication between the oneDir client and server."""
 
-    def __init__(self, host,direct):
+    def __init__(self, host, direct):
         """Constructor which setsup the host the server is at"""
         self.host = host
         self.cookies = None
         self.user = None
         home = expanduser("~")
         self.onedirrectory = direct
-
     def getonedirrectory(self):
         """ask for the current onedir directory location for the user using this connection"""
         return self.onedirrectory
@@ -50,9 +49,10 @@ class OneDirConnection:
             url = self.host + 'file'
             file = os.path.join(self.onedirrectory, file)
         else:
+            if path[0] == os.sep:
+                path = path[1:]
             url = self.host + 'file/' + path
             file = os.path.join(self.onedirrectory, path, file)
-        #print file
         results = requests.post(url,  files={'file': open(file, 'rb')}, cookies=self.cookies)
         if results.json()['result'] == -1:
             return -1
