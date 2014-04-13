@@ -32,7 +32,7 @@ class myEventHandler(FileSystemEventHandler):
         """Handles the creation of new files in the source directory"""
         super(myEventHandler,self).on_created(event)
         #not syncing empty directories serverside atm
-        if self.onedir.cookies is None:
+        if self.onedir.cookies is None or not self.onedir.autosyncstatus():
             return
 
         if event.is_directory:

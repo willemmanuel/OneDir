@@ -22,11 +22,11 @@ import datetime
 #
 # GLOBAL VARIABLES
 # Details the database, upload folders, and other configurations
-#
+# Check these first before running esp folders!
 app = Flask(__name__)
 app.secret_key = 'super-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///C:\\Users\\christopher\\serverside\\test.db"
-UPLOAD_FOLDER = 'C:\Users\christopher\serverside\onedir'
+app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:////home/christopher/serverside/test.db"
+UPLOAD_FOLDER = '/home/christopher/serverside/onedir'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
 

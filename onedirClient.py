@@ -59,13 +59,18 @@ def prompt(oneDir):
 
 def mainprompt(oneDir, pathtoonedir):
         """Main prompt once user has logged in"""
-        userInput = raw_input("Please select an option, " + oneDir.user + " logout, exit, list, get or send")
+        if oneDir.autosyncstatus():
+            stat = 'on'
+        else:
+            stat = 'off'
+        print "Autosync is currently:" + stat + " " + oneDir.getuser()
+        userInput = raw_input("Please select an option, " + oneDir.user + " logout, exit, or autosync to toggle automatic syncing")
         if str.lower(userInput) == 'exit':
             oneDir.logout()
             exit(1)
         elif str.lower(userInput) == 'logout':
             oneDir.logout()
-            prompt(oneDir)
+            return
         elif str.lower(userInput) == 'send':
             filetosend, pathtosend = getfilename('send')
             if oneDir.sendfile(filetosend, pathtosend) == 1:
@@ -75,7 +80,11 @@ def mainprompt(oneDir, pathtoonedir):
         elif str.lower(userInput) == 'get':
             filetosend, pathtosend = getfilename('get')
             oneDir.getfile(pathtosend)
-
+        elif str.lower(userInput) == 'autosync':
+            if oneDir.autosyncstatus():
+                oneDir.disableautosync()
+            else:
+                oneDir.enableautosync()
         elif str.lower(userInput) == 'list':
             oneDir.list()
         else:
@@ -103,9 +112,9 @@ def main():
     observer = Observer()
     observer.schedule(event_handler, oneDir, recursive=True)
     observer.start()
-    prompt(client)
     #we are logdged in now and the OneDirConnection has an internal cookie
     while True:
+        prompt(client)
         mainprompt(client, oneDir)
 if __name__ == '__main__':
     main()

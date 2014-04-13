@@ -14,6 +14,7 @@ class OneDirConnection:
         self.user = None
         home = expanduser("~")
         self.onedirrectory = direct
+        self.autosync = True
     def getonedirrectory(self):
         """ask for the current onedir directory location for the user using this connection"""
         return self.onedirrectory
@@ -87,3 +88,18 @@ class OneDirConnection:
             return 1
         else:
             return -1
+    def autosyncstatus(self):
+        """Returns the value of the autosync member"""
+        return self.autosync
+    def enableautosync(self):
+        """Toggle autosync on"""
+        self.autosync = True
+    def disableautosync(self):
+        """Set autosync to false"""
+        self.autosync = False
+    def getuser(self):
+        """Getter for logged in user"""
+        return self.user
+    def loggedin(self):
+        """Check whether user is logged in currently"""
+        return self.cookies is not None
