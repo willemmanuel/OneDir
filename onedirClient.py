@@ -66,7 +66,7 @@ def mainprompt(oneDir, pathtoonedir):
             else:
                 stat = 'off'
             print "Autosync is currently:" + stat + " " + oneDir.getuser()
-            userInput = raw_input("Please select an option, " + oneDir.user + " logout, exit, or autosync to toggle automatic syncing")
+            userInput = raw_input("Please select an option, " + oneDir.user + " logout, exit, get, post, list, delete, or autosync to toggle automatic syncing")
             if str.lower(userInput) == 'exit':
                 oneDir.logout()
                 exit(1)
@@ -82,6 +82,18 @@ def mainprompt(oneDir, pathtoonedir):
             elif str.lower(userInput) == 'get':
                 filetosend, pathtosend = getfilename('get')
                 oneDir.getfile(pathtosend)
+            elif str.lower(userInput) == 'admin_list':
+                list = oneDir.admin_list()
+                print list
+            elif str.lower(userInput) == 'admin_delete':
+                user = raw_input('Enter username:')
+                file = raw_input('Enter filename:')
+                path = raw_input('Enter path:')
+                oneDir.admin_delete(user, file, path)
+                print "File deleted"
+            elif str.lower(userInput) == 'list':
+                list = oneDir.list()
+                print list
             elif str.lower(userInput) == 'autosync':
                 if oneDir.autosyncstatus():
                     oneDir.disableautosync()
@@ -108,7 +120,7 @@ def main():
     host = 'http://127.0.0.1:5000/'
     #setup default onedir path
     home = expanduser("~")
-    oneDir = os.path.join(home,'onedir')
+    oneDir = os.path.join(home,'Desktop/client')
     client = OneDirConnection(host,oneDir)
     #Watchdog setup:
     event_handler = myEventHandler(client)

@@ -79,10 +79,11 @@ class OneDirConnection:
             return 1
     def getfile(self, file):
         """Gets a file from the OneDir server using the internal cookie stored inside"""
-        if file['path'] == '' or file['path'] == '/':
-            path = os.path.join(file['name'])
+        path = self.sanatize_path(file['path'])
+        if path:
+            path = os.path.join(path, file['name'])
         else:
-            path = os.path.join(file['path'], file['name'])
+            path = os.path.join(file['name'])
         url = self.host + 'file/' + path
         results = requests.get(url, cookies=self.cookies)
         return results.text
@@ -115,6 +116,20 @@ class OneDirConnection:
         except:
             return None
 
+    def admin_list(self):
+        url = self.host + 'admin/list'
+        results = requests.get(url, cookies=self.cookies)
+        try:
+            return json.loads(results.text)['files']
+        except:
+            return None
+    def admin_delete(self, user, file, path):
+        url = self.host + 'admin/file'
+        headers = {'Content-Type': 'application/json'}
+        data = {'user': user, 'path': path, 'file': file}
+        result = requests.delete(url, cookies=self.cookies, headers=headers, data=json.dumps(data))
+        print result.text
+
     def logout(self):
         """Logout from the oneDir api server"""
         url = self.host + "session"
@@ -146,10 +161,8 @@ class OneDirConnection:
         self.synced = []
         if self.filelist:
             for f in self.filelist:
-                if f['path'] == '/':
-                    path = self.onedirrectory
-                else:
-                    path = os.path.join(self.onedirrectory, f['path'])
+                path = self.sanatize_path(f['path'])
+                path = os.path.join(self.onedirrectory, path)
                 if not os.path.exists(path):
                     os.makedirs(path)
                 if not self.exists(f):
@@ -173,19 +186,31 @@ class OneDirConnection:
                     self.synced.append(path)
 
     def hash_file(self, file):
-        if file['path'] == '/':
-            path = os.path.join(self.onedirrectory, file['name'])
+        path = self.sanatize_path(file['path'])
+        if path:
+            path = os.path.join(self.onedirrectory, path)
+            path = os.path.join(path, file['name'])
         else:
-            path = os.path.join(self.onedirrectory, file['path'], file['name'])
+            path = os.path.join(self.onedirrectory, file['name'])
         with open(path, 'rb') as f:
             data = f.read()
         input = str(data) + str(os.stat(path).st_size) + str(self.user)
         return hashlib.sha1(str(input)).hexdigest()
 
     def make_path(self, file):
-        if file['path'] == '/':
+        path = self.sanatize_path(file['path'])
+        if path != '':
+            path = os.path.join(self.onedirrectory, path)
+            path = os.path.join(self.onedirrectory, file['name'])
+            return str(path)
+        else:
             return str(os.path.join(self.onedirrectory, file['name']))
-        return str(os.path.join(self.onedirrectory, file['path'], file['name']))
 
     def exists(self, file):
         return os.path.isfile(self.make_path(file))
+
+    def sanatize_path(self, path):
+        if path.startswith('/'):
+            return str(path[1:])
+        else:
+            return str(path)

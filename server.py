@@ -14,8 +14,8 @@ import datetime
 
 app = Flask(__name__)
 app.secret_key = 'super-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/christopher/serverside/test.db'
-UPLOAD_FOLDER = '/home/christopher/serverside/onedir'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Will/test.db'
+UPLOAD_FOLDER = '/Users/Will/Desktop/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
 
@@ -59,7 +59,7 @@ class User(db.Model):
 
 class File(db.Model):
     __tablename__ = "files"
-    username = db.Column('username',db.String(20), ForeignKey("users.username"))
+    username = db.Column('username',db.String(20), ForeignKey("users.username"), primary_key=True)
     name = db.Column('name', db.String(30), primary_key=True)
     path = db.Column('path', db.String(128), primary_key=True)
     hash = db.Column('hash', db.String(40))
@@ -111,10 +111,24 @@ def list():
     json_string += "]}"
     return json_string
 
-@app.route('/delta', methods=['GET'])
+@app.route('/admin/list', methods=['GET'])
 @login_required
-def delta():
-    return "unimplemented"
+def admin_list():
+    if current_user.username != 'admin':
+        return '{ "result" : -2, "msg" : "unathorized"}'
+    files = File.query.all()
+    if not files:
+        return ""
+    json_string = '{"files":['
+    first = True
+    for f in files:
+        if not first:
+            json_string += ","
+        json_string += '{"username":"' + str(f.username) + '", "name":"' + str(f.name) + '", "path":"' +\
+                       str(f.path) + '", "hash":"' + str(f.hash) + '", "modified":"' + str(f.modified) + '"}'
+        first = False
+    json_string += "]}"
+    return json_string
 
 @app.route('/file/<path:filename>', methods=['GET'])
 @login_required
@@ -167,6 +181,34 @@ def delete():
     if entry:
         db.session.delete(entry)
     db.session.commit()
+    try:
+        os.remove(full_path)
+    except:
+        return '{ "result" : 1, "msg" : "delete failed"}'
+    return '{ "result" : 1, "msg" : "file deleted"}'
+
+@app.route('/admin/file', methods=['DELETE'])
+@login_required
+def admin_delete():
+    if str(current_user.username) != 'admin':
+        return '{ "result" : -2, "msg" : "unathorized"}'
+    file = request.json['file']
+    path = request.json['path']
+    user = request.json['user']
+    if not file:
+        return '{ "result" : -1, "msg" : "missing parameters"}'
+    fixed_path = sanatize_path(request.json['path'])
+    file = secure_filename(file)
+    full_path = os.path.join(app.config['UPLOAD_FOLDER'] + "/" + str(user), fixed_path)
+    full_path = os.path.join(full_path, file)
+    if not os.path.exists(full_path):
+        return '{ "result" : -1, "msg" : "file does not exist"}'
+    user = User.query.filter_by(username=user).first()
+    entry = File.query.filter_by(path=path, name=file, user=user).filter().first()
+    if entry:
+        db.session.delete(entry)
+    db.session.commit()
+    print full_path
     try:
         os.remove(full_path)
     except:
