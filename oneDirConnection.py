@@ -61,7 +61,22 @@ class OneDirConnection:
             return -1
         else:
             return 1
-
+    def deletefile(self,file,path):
+        """Send a request to the server to delete a file the user has remove"""
+        if path == "" or path == "/":
+            url = self.host + 'file'
+        else:
+            if path[0] == os.sep:
+                path = path[1:]
+            url = self.host + 'file/' + path
+        headers = {'Content-Type': 'application/json'}
+        data = {'file' : file, 'path' : path}
+        print "file:" + file + " path: " + path
+        results = requests.delete(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
+        if results.json()['result'] == -1:
+            return -1
+        else:
+            return 1
     def getfile(self, file):
         """Gets a file from the OneDir server using the internal cookie stored inside"""
         if file['path'] == '' or file['path'] == '/':
@@ -71,7 +86,27 @@ class OneDirConnection:
         url = self.host + 'file/' + path
         results = requests.get(url, cookies=self.cookies)
         return results.text
-
+    def movefile(self,file,newpath,oldpath):
+        """move a file already in the directory to another location on the server"""
+        url = self.host + 'file'
+        headers = {'Content-Type': 'application/json'}
+        data = {'op':'move', 'file' : file, 'old_path' : oldpath, 'new_path' : newpath}
+        results = requests.put(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
+        if results.json()['result'] == -1:
+            #failureee
+            return -1
+        else:
+            #greatsuccess
+            return 1
+    def rename(self,oldname,path,newname):
+        """Rename the given file on the server"""
+        url = self.host + 'file'
+        headers = {'Content-Type': 'application/json'}
+        data = {'op':'rename', 'old_file' : oldname, 'path' : path, 'new_file' : newname}
+        #print "oldname: " + oldname
+        #print "path: " + path
+        #print "newname:" + newname
+        result = requests.put(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
     def list(self):
         url = self.host + 'list'
         results = requests.get(url, cookies=self.cookies)

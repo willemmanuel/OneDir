@@ -62,48 +62,97 @@ class myEventHandler(FileSystemEventHandler):
             except IOError as e:
                     print "IOerror creating file " + e.strerror
                     exit(1)
-    """
     def on_moved(self, event):
-        Method to handle moving or renaming of directories and files in the source folder
+        """Method to handle moving or renaming of directories and files in the source folder"""
         super(myEventHandler,self).on_moved(event)
         #moveto events from external folders have no src_path
-        print "moving to:" + event.dest_path
+        source = event.src_path
+        dest =  event.dest_path
         if event.is_directory:
-            source = event.src_path.replace('/testfolder/testdir','/testfolder/copiedTo')
-            destination = event.dest_path.replace('/testfolder/testdir','/testfolder/copiedTo')
-            os.rename(source,destination)
+            pass
         else:
             #if it comes from outside the folder structure
-            source = event.dest_path
-            destination = event.dest_path.replace('/testfolder/testdir','/testfolder/copiedTo')
-            try:
-                if event.src_path is not None:
-                    os.remove(event.src_path.replace('/testfolder/testdir','/testfolder/copiedTo'))
-                shutil.copyfile(source,destination)
-            except OSError as e:
-                print "Error copying file! " + e
-                exit(1)
-    """
+            if source is None:
+                try:
+                    #use os.path.split to get file name and path
+                    splitpath = split(dest)
+                    file = splitpath[1]
+                    pathtoonedir = self.onedir.getonedirrectory()
+                    #print pathtoonedir
+                    #print splitpath[0]
+                    #print "truncated path:"
+                    relpath =  splitpath[0].replace(pathtoonedir ,"")
+                    self.onedir.sendfile(file, relpath)
+                except OSError as e:
+                    print "Error copying file! " + e.strerror
+                    exit(1)
+                except IOError as e:
+                    print "IOerror creating file " + e.strerror
+            else:
+                #file was moved!
+                #check if name stays the same i.e. it's a move not a rename!
+                splitpath = split(source)
+                splitdest = split(dest)
+                if splitpath[1] == splitdest[1]:
+                    try:
+                        #where are we moving from
+                        file = splitpath[1]
+                        pathtoonedir = self.onedir.getonedirrectory()
+                        oldpath =  splitpath[0].replace(pathtoonedir ,"")
+                        #calculate new path
+                        newpath =  splitdest[0].replace(pathtoonedir ,"")
+                        if oldpath is "":
+                            oldpath = os.path.sep
+                        self.onedir.movefile(file,newpath,oldpath)
+                    except OSError as e:
+                        print "Error copying file! " + e
+                        exit(1)
+                else:
+                    #rename!!!!!!!!
+                    file = splitpath[1]
+                    newname = splitdest[1]
+                    pathtoonedir = self.onedir.getonedirrectory()
+                    path =  splitpath[0].replace(pathtoonedir ,"")
+                    if path is "":
+                        path = os.path.sep
+                    else:
+                        path += os.path.sep
+                    #print "working?!?!?!"
+                    self.onedir.rename(file,path,newname)
     """
     def on_deleted(self, event):
         Method to handle the deleting of files and directories in the source folder
         super(myEventHandler,self).on_deleted(event)
-        print "Removed: " + event.src_path
+        #print "Removed: " + event.src_path
+        if self.onedir.cookies is None or not self.onedir.autosyncstatus():
+            return
+
         if event.is_directory:
-            source = event.src_path.replace('/testfolder/testdir','/testfolder/copiedTo')
-            try:
-                os.rmdir(source)
-            except OSError as e:
-                if e.errno != 2:
-                    print e
-                    exit(1)
+            pass
+            #try:
+            #    os.makedirs(copyTo)
+            #except OSError as e:
+             #   if e.errno != errno.EEXIST:
+              #      raise
         else:
-            source = event.src_path.replace('/testfolder/testdir','/testfolder/copiedTo')
+            source = event.src_path
             try:
-                os.remove(source)
+                #use os.path.split to get file name and path
+                splitpath = split(source)
+                file = splitpath[1]
+                pathtoonedir = self.onedir.getonedirrectory()
+                #print pathtoonedir
+                #print "truncated path:"
+                relpath =  splitpath[0].replace(pathtoonedir ,"")
+                self.onedir.deletefile(file, relpath)
             except OSError as e:
-                print "Error deleting file! " + e
-                exit(1)
+                    print "Error copying file! " + e.strerror
+                    exit(1)
+            except IOError as e:
+                    print "IOerror creating file " + e.strerror
+                    exit(1)
+    """
+    """
     def on_modified(self, event):
         Handles modifications to prexisting files and directories in the source folder
         super(myEventHandler,self).on_modified(event)

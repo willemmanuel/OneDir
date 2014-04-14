@@ -12,20 +12,9 @@ import datetime
 # from flask.ext.migrate import Migrate, MigrateCommand
 # from flask.ext.script import Manager
 
-
-#
-#
-# FLASK ONEDIR API
-#
-#
-
-#
-# GLOBAL VARIABLES
-# Details the database, upload folders, and other configurations
-# Check these first before running esp folders!
 app = Flask(__name__)
 app.secret_key = 'super-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:////home/christopher/serverside/test.db"
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/christopher/serverside/test.db'
 UPLOAD_FOLDER = '/home/christopher/serverside/onedir'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
@@ -37,10 +26,6 @@ db = SQLAlchemy(app)
 # manager = Manager(app)
 # manager.add_command('db', MigrateCommand)
 
-#
-# USER MODEL
-# SQLAlchemy model that interacts with SQLite database
-#
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column('user_id',db.Integer , primary_key=True)
@@ -94,9 +79,6 @@ class File(db.Model):
         user = User.query.filter_by(username=self.username).first()
         return str(user.get_folder()) + "/" + self.relative_path()
 
-#
-# LOGIN MANAGER - in charge of sessions
-#
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -168,6 +150,29 @@ def upload_file(path):
     db.session.commit()
     return '{ "result" : 1, "msg" : "file uploaded"}'
 
+@app.route('/file', methods=['DELETE'])
+@login_required
+def delete():
+    file = request.json['file']
+    path = request.json['path']
+    if not file:
+        return '{ "result" : -1, "msg" : "missing parameters"}'
+    fixed_path = sanatize_path(request.json['path'])
+    file = secure_filename(file)
+    full_path = os.path.join(current_user.get_folder(), fixed_path)
+    full_path = os.path.join(full_path, file)
+    if not os.path.exists(full_path):
+        return '{ "result" : -1, "msg" : "file does not exist"}'
+    entry = File.query.filter_by(path=path, name=file, user=current_user).filter().first()
+    if entry:
+        db.session.delete(entry)
+    db.session.commit()
+    try:
+        os.remove(full_path)
+    except:
+        return '{ "result" : 1, "msg" : "delete failed"}'
+    return '{ "result" : 1, "msg" : "file deleted"}'
+
 @app.route('/file', methods=['POST'])
 @login_required
 def upload_no_path():
@@ -214,6 +219,44 @@ def login():
     login_user(registered_user)
     return '{ "result" : "' + str(username) + '", "msg" : "authenticated"}'
 
+
+# {'op': 'rename or move', 'old_file/path:','new_file/path', 'file/path'}
+@app.route('/file', methods=['PUT'])
+@login_required
+def update():
+    if request.json['op'] == 'rename':
+        old_file = secure_filename(request.json['old_file'])
+        new_file = secure_filename(request.json['new_file'])
+        path = sanatize_path(request.json['path'])
+        folder_path = os.path.join(current_user.get_folder(), path)
+        full_path = os.path.join(folder_path, old_file)
+        if not os.path.exists(full_path):
+            return '{ "result" : -1, "msg" : "file does not exist"}'
+        entry = File.query.filter_by(path=request.json['path'], name=old_file, user=current_user).filter().first()
+        entry.name = new_file
+        os.rename(full_path, os.path.join(folder_path, new_file))
+        db.session.commit()
+        return '{ "result" : 1, "msg" : "renamed file"}'
+    elif request.json['op'] == 'move':
+        file = secure_filename(request.json['file'])
+        new_path = sanatize_path(request.json['new_path'])
+        old_path = sanatize_path(request.json['old_path'])
+        folder_path = os.path.join(current_user.get_folder(), old_path)
+        full_path = os.path.join(folder_path, file)
+        new_folder_path = os.path.join(current_user.get_folder(), new_path)
+        new_full_path = os.path.join(new_folder_path, file)
+        if not os.path.exists(full_path):
+            return '{ "result" : -1, "msg" : "file does not exist"}'
+        if not os.path.exists(new_folder_path):
+            os.makedirs(new_folder_path)
+        entry = File.query.filter_by(path=request.json['old_path'], name=file, user=current_user).filter().first()
+        entry.path = request.json['new_path']
+        os.rename(full_path, new_full_path)
+        db.session.commit()
+        return '{ "result" : 1, "msg" : "moved file"}'
+    else:
+        return '{ "result" : -1, "msg" : "incorrect or missing parameters"}'
+
 @app.route('/session', methods=['DELETE'])
 def logout():
     if current_user:
@@ -233,6 +276,12 @@ def hash_file(path):
         data = f.read()
     input = str(data) + str(os.stat(path).st_size) + str(current_user.username)
     return str(hashlib.sha1(str(input)).hexdigest())
+
+def sanatize_path(path):
+    if path.startswith('/'):
+        return path[1:]
+    else:
+        return path
 
 if __name__ == '__main__':
     # manager.run()

@@ -86,7 +86,7 @@ def mainprompt(oneDir, pathtoonedir):
                 if oneDir.autosyncstatus():
                     oneDir.disableautosync()
                 else:
-                    oneDir.full_sync()
+                    #oneDir.full_sync()
                     oneDir.enableautosync()
             elif str.lower(userInput) == 'list':
                 oneDir.list()
