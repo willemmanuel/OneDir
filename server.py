@@ -261,6 +261,32 @@ def login():
     login_user(registered_user)
     return '{ "result" : "' + str(username) + '", "msg" : "authenticated"}'
 
+@app.route('/change_password', methods=['PUT'])
+@login_required
+def change_password():
+    if not request.json['password']:
+        return '{ "result" : -1, "msg" : "missing parameters"}'
+    password = request.json['password']
+    hash = hashlib.sha256(password).hexdigest()
+    current_user.password = hash
+    db.session.commit()
+    logout_user()
+    return '{ "result" : "1", "msg" : "changed password"}'
+
+@app.route('/admin/change_password', methods=['PUT'])
+@login_required
+def admin_change_password():
+    if current_user.username != 'admin':
+        return '{ "result" : "-2", "msg" : "unauthorized"}'
+    if not request.json['password'] or not request.json['user']:
+        return '{ "result" : -1, "msg" : "missing parameters"}'
+    password = request.json['password']
+    user = request.json['user']
+    hash = hashlib.sha256(password).hexdigest()
+    user = User.query.filter_by(username=user).first()
+    user.password = hash
+    db.session.commit()
+    return '{ "result" : "1", "msg" : "changed password"}'
 
 # {'op': 'rename or move', 'old_file/path:','new_file/path', 'file/path'}
 @app.route('/file', methods=['PUT'])

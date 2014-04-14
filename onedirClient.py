@@ -102,6 +102,14 @@ def mainprompt(oneDir, pathtoonedir):
                     oneDir.enableautosync()
             elif str.lower(userInput) == 'list':
                 oneDir.list()
+            elif str.lower(userInput) == 'admin_change_password':
+                user = raw_input('Enter username:')
+                password = raw_input('Enter password:')
+                oneDir.admin_changepassword(user, password)
+            elif str.lower(userInput) == 'change_password':
+                password = raw_input('New password:')
+                oneDir.changepassword(password)
+                prompt(oneDir)
             else:
                 print "Please enter a valid option!"
 

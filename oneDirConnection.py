@@ -46,6 +46,19 @@ class OneDirConnection:
         else:
             return -1
 
+    def changepassword(self, password):
+        url = self.host + 'change_password'
+        headers = {'Content-Type': 'application/json'}
+        data = {'password': password}
+        results = requests.put(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
+        self.logout()
+
+    def admin_changepassword(self, user, password):
+        url = self.host + 'admin/change_password'
+        headers = {'Content-Type': 'application/json'}
+        data = {'user' : user, 'password': password}
+        results = requests.put(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
+
     def sendfile(self, file, path):
         """Sends a file to the OneDir server using the internal cookie stored inside"""
         if path == "" or path == "/":
@@ -61,6 +74,7 @@ class OneDirConnection:
             return -1
         else:
             return 1
+
     def deletefile(self,file,path):
         """Send a request to the server to delete a file the user has remove"""
         if path == "" or path == "/":
