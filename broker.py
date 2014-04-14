@@ -9,14 +9,14 @@ import time
 import json
 
 class Broker:
-    def __init__(self, host, user, password, onedir):
+    def __init__(self, onedir):
         """Constructor which sets up the host the server is at"""
-        self.user = user
         home = expanduser("~")
-        self.onedirrectory = onedir
-        self.host = host
-        self.connection = oneDirConnection.OneDirConnection(host)
-        if self.connection.login(user, password) != 1:
+        self.onedirrectory = home + '/onedir'
+        self.connection = onedir
+        self.host = self.connection.host
+        self.user = self.connection.user
+        if self.connection.cookies is None:
             raise Exception
         self.list = None
         self.full_sync()
@@ -83,4 +83,4 @@ def main():
         time.sleep(10)
         x.full_sync()
 
-main()
+#main()

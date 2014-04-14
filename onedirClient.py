@@ -11,6 +11,7 @@ import sys
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler
 from watchdog_client import myEventHandler
+from broker import Broker
 def register(oneDir):
         """Handles registration interactions with the user"""
         print "You selected register. Please enter exit to quit or login to try to login:"
@@ -115,6 +116,8 @@ def main():
     #we are logdged in now and the OneDirConnection has an internal cookie
     while True:
         prompt(client)
+        syncme = Broker(client)
+        syncme.full_sync()
         mainprompt(client, oneDir)
 if __name__ == '__main__':
     main()
