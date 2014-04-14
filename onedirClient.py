@@ -60,36 +60,38 @@ def prompt(oneDir):
 
 def mainprompt(oneDir, pathtoonedir):
         """Main prompt once user has logged in"""
-        if oneDir.autosyncstatus():
-            stat = 'on'
-        else:
-            stat = 'off'
-        print "Autosync is currently:" + stat + " " + oneDir.getuser()
-        userInput = raw_input("Please select an option, " + oneDir.user + " logout, exit, or autosync to toggle automatic syncing")
-        if str.lower(userInput) == 'exit':
-            oneDir.logout()
-            exit(1)
-        elif str.lower(userInput) == 'logout':
-            oneDir.logout()
-            return
-        elif str.lower(userInput) == 'send':
-            filetosend, pathtosend = getfilename('send')
-            if oneDir.sendfile(filetosend, pathtosend) == 1:
-                print "File sent!"
-            else:
-                print "Issue sending file"
-        elif str.lower(userInput) == 'get':
-            filetosend, pathtosend = getfilename('get')
-            oneDir.getfile(pathtosend)
-        elif str.lower(userInput) == 'autosync':
+        while True:
             if oneDir.autosyncstatus():
-                oneDir.disableautosync()
+                stat = 'on'
             else:
-                oneDir.enableautosync()
-        elif str.lower(userInput) == 'list':
-            oneDir.list()
-        else:
-            print "Please enter a valid option!"
+                stat = 'off'
+            print "Autosync is currently:" + stat + " " + oneDir.getuser()
+            userInput = raw_input("Please select an option, " + oneDir.user + " logout, exit, or autosync to toggle automatic syncing")
+            if str.lower(userInput) == 'exit':
+                oneDir.logout()
+                exit(1)
+            elif str.lower(userInput) == 'logout':
+                oneDir.logout()
+                return
+            elif str.lower(userInput) == 'send':
+                filetosend, pathtosend = getfilename('send')
+                if oneDir.sendfile(filetosend, pathtosend) == 1:
+                    print "File sent!"
+                else:
+                    print "Issue sending file"
+            elif str.lower(userInput) == 'get':
+                filetosend, pathtosend = getfilename('get')
+                oneDir.getfile(pathtosend)
+            elif str.lower(userInput) == 'autosync':
+                if oneDir.autosyncstatus():
+                    oneDir.disableautosync()
+                else:
+                    oneDir.full_sync()
+                    oneDir.enableautosync()
+            elif str.lower(userInput) == 'list':
+                oneDir.list()
+            else:
+                print "Please enter a valid option!"
 
 def getfilename(typeoffile):
     """Handles promptin for file names"""
@@ -116,8 +118,8 @@ def main():
     #we are logdged in now and the OneDirConnection has an internal cookie
     while True:
         prompt(client)
-        syncme = Broker(client)
-        syncme.full_sync()
+        client.full_sync()
+        client.enableautosync()
         mainprompt(client, oneDir)
 if __name__ == '__main__':
     main()

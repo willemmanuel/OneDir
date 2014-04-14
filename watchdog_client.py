@@ -9,6 +9,8 @@ import errno
 import shutil
 from oneDirConnection import OneDirConnection
 import types
+import time
+import hashlib
 #Custom event handler for Watchdog events
 #assumes Linux atm
 #Goals: understand event handling in Watchdog and information in the event and possible pitfalls

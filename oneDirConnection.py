@@ -4,6 +4,8 @@ import os
 from os.path import join, expanduser
 from Queue import Queue
 import re
+import hashlib
+import time
 class OneDirConnection:
     """Class to facilitate managing network communication between the oneDir client and server."""
 
@@ -14,7 +16,7 @@ class OneDirConnection:
         self.user = None
         home = expanduser("~")
         self.onedirrectory = direct
-        self.autosync = True
+        self.autosync = False
     def getonedirrectory(self):
         """ask for the current onedir directory location for the user using this connection"""
         return self.onedirrectory
@@ -103,3 +105,52 @@ class OneDirConnection:
     def loggedin(self):
         """Check whether user is logged in currently"""
         return self.cookies is not None
+    def full_sync(self):
+        """sync thefiles between the server and client"""
+        self.filelist = self.list()
+        self.synced = []
+        if self.filelist:
+            for f in self.filelist:
+                if f['path'] == '/':
+                    path = self.onedirrectory
+                else:
+                    path = os.path.join(self.onedirrectory, f['path'])
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                if not self.exists(f):
+                    data = self.getfile(f)
+                    with open(self.make_path(f), 'a') as new_file:
+                        new_file.write(data)
+                        new_file.close()
+                elif str(self.hash_file(f)) != str(f['hash']):
+                    self.sendfile(f['name'], f['path'])
+                if self.make_path(f) not in self.synced:
+                    self.synced.append(self.make_path(f))
+        os_walk = os.walk(self.onedirrectory)
+        for directory in os_walk:
+            for f in directory[2]:
+                if f.startswith('.'):
+                    continue
+                path = os.path.join(directory[0], f)
+                if path not in self.synced:
+                    d = directory[0].replace(self.onedirrectory, "")
+                    self.sendfile(f, d)
+                    self.synced.append(path)
+
+    def hash_file(self, file):
+        if file['path'] == '/':
+            path = os.path.join(self.onedirrectory, file['name'])
+        else:
+            path = os.path.join(self.onedirrectory, file['path'], file['name'])
+        with open(path, 'rb') as f:
+            data = f.read()
+        input = str(data) + str(os.stat(path).st_size) + str(self.user)
+        return hashlib.sha1(str(input)).hexdigest()
+
+    def make_path(self, file):
+        if file['path'] == '/':
+            return str(os.path.join(self.onedirrectory, file['name']))
+        return str(os.path.join(self.onedirrectory, file['path'], file['name']))
+
+    def exists(self, file):
+        return os.path.isfile(self.make_path(file))
