@@ -49,12 +49,15 @@ class myEventHandler(FileSystemEventHandler):
             try:
                 #use os.path.split to get file name and path
                 splitpath = split(source)
+                print "dssaddsa"
+                for i in splitpath:
+                    print i
                 file = splitpath[1]
                 pathtoonedir = self.onedir.getonedirrectory()
-                #print pathtoonedir
-                #print splitpath[0]
-                #print "truncated path:"
                 relpath =  splitpath[0].replace(pathtoonedir ,"")
+                print "created!"
+                print relpath
+                print file
                 self.onedir.sendfile(file, relpath)
             except OSError as e:
                     print "Error copying file! " + e.strerror
@@ -116,12 +119,10 @@ class myEventHandler(FileSystemEventHandler):
                     if path is "":
                         path = os.path.sep
                     else:
-                        path += os.path.sep
-                    #print "working?!?!?!"
+                        path = path[1:]
                     self.onedir.rename(file,path,newname)
-    """
     def on_deleted(self, event):
-        Method to handle the deleting of files and directories in the source folder
+        """Method to handle the deleting of files and directories in the source folder"""
         super(myEventHandler,self).on_deleted(event)
         #print "Removed: " + event.src_path
         if self.onedir.cookies is None or not self.onedir.autosyncstatus():
@@ -151,7 +152,6 @@ class myEventHandler(FileSystemEventHandler):
             except IOError as e:
                     print "IOerror creating file " + e.strerror
                     exit(1)
-    """
     """
     def on_modified(self, event):
         Handles modifications to prexisting files and directories in the source folder

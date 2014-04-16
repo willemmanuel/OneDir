@@ -118,9 +118,6 @@ class OneDirConnection:
         url = self.host + 'file'
         headers = {'Content-Type': 'application/json'}
         data = {'op':'rename', 'old_file' : oldname, 'path' : path, 'new_file' : newname}
-        #print "oldname: " + oldname
-        #print "path: " + path
-        #print "newname:" + newname
         result = requests.put(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
     def list(self):
         url = self.host + 'list'
