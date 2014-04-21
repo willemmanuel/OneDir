@@ -49,15 +49,9 @@ class myEventHandler(FileSystemEventHandler):
             try:
                 #use os.path.split to get file name and path
                 splitpath = split(source)
-                print "dssaddsa"
-                for i in splitpath:
-                    print i
                 file = splitpath[1]
                 pathtoonedir = self.onedir.getonedirrectory()
                 relpath =  splitpath[0].replace(pathtoonedir ,"")
-                print "created!"
-                print relpath
-                print file
                 self.onedir.sendfile(file, relpath)
             except OSError as e:
                     print "Error copying file! " + e.strerror
@@ -153,18 +147,28 @@ class myEventHandler(FileSystemEventHandler):
             except IOError as e:
                     print "IOerror creating file " + e.strerror
                     exit(1)
-    """
+
     def on_modified(self, event):
-        Handles modifications to prexisting files and directories in the source folder
+        """Handles modifications to prexisting files and directories in the source folder"""
         super(myEventHandler,self).on_modified(event)
-        print "Modified: " + event.src_path
         if event.is_directory:
             pass
         else:
-            destination = event.src_path.replace('/testfolder/testdir','/testfolder/copiedTo')
+            source = event.src_path
             try:
-                shutil.copyfile(event.src_path,destination)
+                #use os.path.split to get file name and path
+                splitpath = split(source)
+                for i in splitpath:
+                    print i
+                file = splitpath[1]
+                if file.startswith('.'):
+                    return
+                pathtoonedir = self.onedir.getonedirrectory()
+                relpath =  splitpath[0].replace(pathtoonedir ,"")
+                self.onedir.sendfile(file, relpath)
             except OSError as e:
-                print "Error copying file! " + e
-                exit(1)
-    """
+                    print "Error copying file! " + e.strerror
+                    exit(1)
+            except IOError as e:
+                    print "IOerror creating file " + e.strerror
+                    exit(1)

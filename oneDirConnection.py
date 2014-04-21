@@ -6,6 +6,7 @@ from Queue import Queue
 import re
 import hashlib
 import time
+import httplib
 class OneDirConnection:
     """Class to facilitate managing network communication between the oneDir client and server."""
 
@@ -70,6 +71,12 @@ class OneDirConnection:
             url = self.host + 'file/' + path
             file = os.path.join(self.onedirrectory, path, file)
         results = requests.post(url,  files={'file': open(file, 'rb')}, cookies=self.cookies)
+        if results.status_code == 500:
+            print "Databse error!,exiting"
+            exit(1)
+        if results is None:
+            print "Database rror talking to server!"
+            exit(1)
         if results.json()['result'] == -1:
             return -1
         else:
@@ -78,7 +85,7 @@ class OneDirConnection:
     def deletefile(self,file,path):
         """Send a request to the server to delete a file the user has removed"""
         url = self.host + 'file'
-        path = self.sanatize_path(path)
+        path = self.sanitize_path(path)
         headers = {'Content-Type': 'application/json'}
         data = {'file' : file, 'path' : path}
         print "file:" + file + " path: " + path
@@ -90,7 +97,7 @@ class OneDirConnection:
 
     def getfile(self, file):
         """Gets a file from the OneDir server using the internal cookie stored inside"""
-        path = self.sanatize_path(file['path'])
+        path = self.sanitize_path(file['path'])
         if path:
             path = os.path.join(path, file['name'])
         else:
@@ -169,7 +176,7 @@ class OneDirConnection:
         self.synced = []
         if self.filelist:
             for f in self.filelist:
-                path = self.sanatize_path(f['path'])
+                path = self.sanitize_path(f['path'])
                 path = os.path.join(self.onedirrectory, path)
                 if not os.path.exists(path):
                     os.makedirs(path)
@@ -192,9 +199,8 @@ class OneDirConnection:
                     d = directory[0].replace(self.onedirrectory, "")
                     self.sendfile(f, d)
                     self.synced.append(path)
-
     def hash_file(self, file):
-        path = self.sanatize_path(file['path'])
+        path = self.sanitize_path(file['path'])
         if path:
             path = os.path.join(self.onedirrectory, path)
             path = os.path.join(path, file['name'])
@@ -206,7 +212,7 @@ class OneDirConnection:
         return hashlib.sha1(str(input)).hexdigest()
 
     def make_path(self, file):
-        path = self.sanatize_path(file['path'])
+        path = self.sanitize_path(file['path'])
         if path != '':
             path = os.path.join(self.onedirrectory, path)
             path = os.path.join(self.onedirrectory, file['name'])
@@ -217,7 +223,7 @@ class OneDirConnection:
     def exists(self, file):
         return os.path.isfile(self.make_path(file))
 
-    def sanatize_path(self, path):
+    def sanitize_path(self, path):
         if path.startswith('/'):
             return str(path[1:])
         else:

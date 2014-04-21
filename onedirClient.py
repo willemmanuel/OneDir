@@ -11,7 +11,8 @@ import sys
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler
 from watchdog_client import myEventHandler
-
+import thread
+from filesync import syncthread
 def register(oneDir):
         """Handles registration interactions with the user"""
         print "You selected register. Please enter exit to quit or login to try to login:"
@@ -60,6 +61,12 @@ def prompt(oneDir):
 
 def mainprompt(oneDir, pathtoonedir):
         """Main prompt once user has logged in"""
+        try:
+            r = syncthread(oneDir)
+            r.start()
+        except:
+            print "Error: unable to start thread"
+
         while True:
             if oneDir.autosyncstatus():
                 stat = 'on'
@@ -72,6 +79,7 @@ def mainprompt(oneDir, pathtoonedir):
                 exit(1)
             elif str.lower(userInput) == 'logout':
                 oneDir.logout()
+                r.shutdown = True
                 return
             elif str.lower(userInput) == 'send':
                 filetosend, pathtosend = getfilename('send')
@@ -96,9 +104,11 @@ def mainprompt(oneDir, pathtoonedir):
                 print list
             elif str.lower(userInput) == 'autosync':
                 if oneDir.autosyncstatus():
+                    r.shutdown = True
                     oneDir.disableautosync()
                 else:
                     #oneDir.full_sync()
+                    r.shutdown = False
                     oneDir.enableautosync()
             elif str.lower(userInput) == 'list':
                 oneDir.list()

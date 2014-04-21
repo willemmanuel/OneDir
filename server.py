@@ -8,6 +8,8 @@ import hashlib
 from werkzeug.utils import secure_filename
 import os
 import datetime
+import shutil
+from os.path import isdir
 # from sqlalchemy import create_engine
 # from flask.ext.migrate import Migrate, MigrateCommand
 # from flask.ext.script import Manager
@@ -16,8 +18,11 @@ app = Flask(__name__)
 app.secret_key = 'super-secret-key'
 
 # Will's settings
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Will/test.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////user/Will/test.db'
 # UPLOAD_FOLDER = '/Users/Will/Desktop/uploads/'
+#Chris's settings
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/christopher/serverside/test.db'
+UPLOAD_FOLDER = '/home/christopher/serverside/onedir'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
 
@@ -243,6 +248,9 @@ def register():
         user = User(username, password, email)
         db.session.add(user)
         db.session.commit()
+        #does it check to see if user exists first?
+        #if isdir(user.get_folder()):
+        #    shutil.rmtree(user.get_folder())
         os.makedirs(user.get_folder())
     except Exception as e:
         print e
