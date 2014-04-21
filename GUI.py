@@ -1,10 +1,11 @@
-
+from oneDirConnection import OneDirConnection
 try:
     import tkinter as tk
 except ImportError:
     import Tkinter as tk
+
 # from http://effbot.org/tkinterbook/entry.htm
-passwords = [('DaniWeb', 'best1'), ('newbie', 'help!help!')]
+oneDir = OneDirConnection('http://127.0.0.1:5000/', '/Users/Will/Desktop/client')
 def make_entry(parent, caption, width=None, **options):
     tk.Label(parent, text=caption).pack(side=tk.TOP)
     entry = tk.Entry(parent, **options)
@@ -12,12 +13,13 @@ def make_entry(parent, caption, width=None, **options):
         entry.config(width=width)
     entry.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
     return entry
+
 def enter(event):
     check_password()
+
 def check_password():
     """ Collect 1's for every failure and quit program in case of failure_max failures """
-    print(user.get(), password.get())
-    if (user.get(), password.get()) in passwords:
+    if oneDir.login(user.get(), password.get()) == 1:
         root.destroy()
         print('Logged in')
         return
@@ -41,3 +43,4 @@ b.pack(side=tk.BOTTOM)
 password.bind('<Return>', enter)
 user.focus_set()
 parent.mainloop()
+
