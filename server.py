@@ -14,8 +14,10 @@ import datetime
 
 app = Flask(__name__)
 app.secret_key = 'super-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/christopher/serverside/test.db'
-UPLOAD_FOLDER = '/home/christopher/serverside/onedir'
+
+# Will's settings
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Will/test.db'
+# UPLOAD_FOLDER = '/Users/Will/Desktop/uploads/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
 
@@ -324,6 +326,24 @@ def update():
         return '{ "result" : 1, "msg" : "moved file"}'
     else:
         return '{ "result" : -1, "msg" : "incorrect or missing parameters"}'
+
+@app.route('/directory/<path:path>', methods=['POST', 'DELETE'])
+@login_required
+def directory(path):
+    if request.method == 'POST':
+        path = sanatize_path(path)
+        path = os.path.join(current_user.get_folder(), path)
+        os.makedirs(path)
+        return '{ "result" : 1, "msg" : "created path"}'
+    else:
+        path = sanatize_path(path)
+        print path
+        path = os.path.join(current_user.get_folder(), path)
+        try:
+            os.rmdir(path)
+        except:
+            return '{ "result" : -1, "msg" : "path not empty"}'
+        return '{ "result" : 1, "msg" : "destroyed path"}'
 
 @app.route('/session', methods=['DELETE'])
 def logout():

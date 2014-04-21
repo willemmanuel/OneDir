@@ -26,6 +26,8 @@ class TestServer(TestCase):
         headers = {'Content-Type': 'application/json'}
         r = requests.post(url, files={'file': open('test_upload.txt', 'rb')}, cookies=self.cookies)
         self.assertEqual(r.json()['result'], 1)
+        r = requests.post(url, files={'file': open('test_update.txt', 'rb')}, cookies=self.cookies)
+        self.assertEqual(r.json()['result'], 1)
 
     def test_get_file(self):
         url = HOST + "file/test/test_upload.txt"
@@ -77,7 +79,8 @@ class TestServer(TestCase):
         headers = {'Content-Type': 'application/json'}
         r = requests.get(url, headers=headers, cookies=self.cookies)
         files = json.loads(r.text)
-        self.assertEqual(files['files'][0]['name'], 'test_upload.txt')
+        f = files['files'][0]['name']
+        self.assertTrue('test_' in f)
 
     def test_delete(self):
         url = HOST + 'file'
@@ -104,4 +107,12 @@ class TestServer(TestCase):
         self.assertEquals(r.json()['result'], 1)
         data = {'op':'rename', 'old_file' : 'test_update2.txt', 'path' : '/', 'new_file' : 'test_update.txt'}
         r = requests.put(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
+        self.assertEquals(r.json()['result'], 1)
+
+    def test_path(self):
+        url = HOST + 'directory/new_path'
+        headers = {'Content-Type': 'application/json'}
+        r = requests.post(url, headers=headers, cookies=self.cookies)
+        self.assertEquals(r.json()['result'], 1)
+        r = requests.delete(url, headers=headers, cookies=self.cookies)
         self.assertEquals(r.json()['result'], 1)
