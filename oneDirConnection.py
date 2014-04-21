@@ -75,8 +75,6 @@ class OneDirConnection:
         else:
             return 1
 
-
-    # FIX THIS
     def deletefile(self,file,path):
         """Send a request to the server to delete a file the user has removed"""
         url = self.host + 'file'
