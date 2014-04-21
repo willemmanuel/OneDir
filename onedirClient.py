@@ -11,7 +11,7 @@ import sys
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler
 from watchdog_client import myEventHandler
-from broker import Broker
+
 def register(oneDir):
         """Handles registration interactions with the user"""
         print "You selected register. Please enter exit to quit or login to try to login:"
@@ -128,7 +128,7 @@ def main():
     host = 'http://127.0.0.1:5000/'
     #setup default onedir path
     home = expanduser("~")
-    oneDir = os.path.join(home,'onedir')
+    oneDir = '/Users/Will/Desktop/client'
     client = OneDirConnection(host,oneDir)
     #Watchdog setup:
     event_handler = myEventHandler(client)

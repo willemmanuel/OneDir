@@ -16,8 +16,8 @@ app = Flask(__name__)
 app.secret_key = 'super-secret-key'
 
 # Will's settings
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Will/test.db'
-# UPLOAD_FOLDER = '/Users/Will/Desktop/uploads/'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Will/test.db'
+UPLOAD_FOLDER = '/Users/Will/Desktop/uploads/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
 
@@ -210,7 +210,6 @@ def admin_delete():
     if entry:
         db.session.delete(entry)
     db.session.commit()
-    print full_path
     try:
         os.remove(full_path)
     except:
@@ -290,10 +289,10 @@ def admin_change_password():
     db.session.commit()
     return '{ "result" : "1", "msg" : "changed password"}'
 
-# {'op': 'rename or move', 'old_file/path:','new_file/path', 'file/path'}
 @app.route('/file', methods=['PUT'])
 @login_required
 def update():
+    # {'op': 'rename or move', 'old_file/path:','new_file/path', 'file/path'}
     if request.json['op'] == 'rename':
         old_file = secure_filename(request.json['old_file'])
         new_file = secure_filename(request.json['new_file'])
@@ -337,7 +336,6 @@ def directory(path):
         return '{ "result" : 1, "msg" : "created path"}'
     else:
         path = sanatize_path(path)
-        print path
         path = os.path.join(current_user.get_folder(), path)
         try:
             os.rmdir(path)

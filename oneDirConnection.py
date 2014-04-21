@@ -75,14 +75,12 @@ class OneDirConnection:
         else:
             return 1
 
+
+    # FIX THIS
     def deletefile(self,file,path):
-        """Send a request to the server to delete a file the user has remove"""
-        if path == "" or path == "/":
-            url = self.host + 'file'
-        else:
-            if path[0] == os.sep:
-                path = path[1:]
-            url = self.host + 'file/' + path
+        """Send a request to the server to delete a file the user has removed"""
+        url = self.host + 'file'
+        path = self.sanatize_path(path)
         headers = {'Content-Type': 'application/json'}
         data = {'file' : file, 'path' : path}
         print "file:" + file + " path: " + path
@@ -91,6 +89,7 @@ class OneDirConnection:
             return -1
         else:
             return 1
+
     def getfile(self, file):
         """Gets a file from the OneDir server using the internal cookie stored inside"""
         path = self.sanatize_path(file['path'])

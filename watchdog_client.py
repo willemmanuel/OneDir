@@ -121,6 +121,7 @@ class myEventHandler(FileSystemEventHandler):
                     else:
                         path = path[1:]
                     self.onedir.rename(file,path,newname)
+    # FIX THIS
     def on_deleted(self, event):
         """Method to handle the deleting of files and directories in the source folder"""
         super(myEventHandler,self).on_deleted(event)
