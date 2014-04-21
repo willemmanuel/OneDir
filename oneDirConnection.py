@@ -174,6 +174,7 @@ class OneDirConnection:
         """sync thefiles between the server and client"""
         self.filelist = self.list()
         self.synced = []
+        print self.filelist
         if self.filelist:
             for f in self.filelist:
                 path = self.sanitize_path(f['path'])
@@ -191,6 +192,10 @@ class OneDirConnection:
                     self.synced.append(self.make_path(f))
         os_walk = os.walk(self.onedirrectory)
         for directory in os_walk:
+            if os.listdir(directory[0]) == []:
+                e = directory[0].replace(self.onedirrectory, "")
+                self.senddirectory(e)
+                print e
             for f in directory[2]:
                 if f.startswith('.'):
                     continue

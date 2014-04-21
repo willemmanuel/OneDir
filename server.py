@@ -340,7 +340,8 @@ def directory(path):
     if request.method == 'POST':
         path = sanitize_path(path)
         path = os.path.join(current_user.get_folder(), path)
-        os.makedirs(path)
+        if not os.path.isdir(path):
+            os.makedirs(path)
         return '{ "result" : 1, "msg" : "created path"}'
     else:
         path = sanitize_path(path)
