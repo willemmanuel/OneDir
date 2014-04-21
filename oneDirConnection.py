@@ -219,7 +219,18 @@ class OneDirConnection:
             return str(path)
         else:
             return str(os.path.join(self.onedirrectory, file['name']))
-
+    def senddirectory(self,path):
+        if path[0] == '/':
+            path = path[1:]
+        url = self.host + 'directory/' + path
+        results = requests.post(url, cookies=self.cookies)
+        return results.text
+    def deldirectory(self,path):
+        if path[0] == '/':
+            path = path[1:]
+        url = self.host + 'directory/' + path
+        results = requests.delete(url, cookies=self.cookies)
+        return results.text
     def exists(self, file):
         return os.path.isfile(self.make_path(file))
 

@@ -62,8 +62,9 @@ def prompt(oneDir):
 def mainprompt(oneDir, pathtoonedir):
         """Main prompt once user has logged in"""
         try:
-            r = syncthread(oneDir)
-            r.start()
+            pass
+            #r = syncthread(oneDir)
+            #r.start()
         except:
             print "Error: unable to start thread"
 
@@ -104,11 +105,11 @@ def mainprompt(oneDir, pathtoonedir):
                 print list
             elif str.lower(userInput) == 'autosync':
                 if oneDir.autosyncstatus():
-                    r.shutdown = True
+                    #r.shutdown = True
                     oneDir.disableautosync()
                 else:
                     #oneDir.full_sync()
-                    r.shutdown = False
+                    #r.shutdown = False
                     oneDir.enableautosync()
             elif str.lower(userInput) == 'list':
                 oneDir.list()

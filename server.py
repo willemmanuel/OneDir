@@ -178,7 +178,7 @@ def delete():
     path = request.json['path']
     if not file:
         return '{ "result" : -1, "msg" : "missing parameters"}'
-    fixed_path = sanatize_path(request.json['path'])
+    fixed_path = sanitize_path(request.json['path'])
     file = secure_filename(file)
     full_path = os.path.join(current_user.get_folder(), fixed_path)
     full_path = os.path.join(full_path, file)
@@ -204,7 +204,7 @@ def admin_delete():
     user = request.json['user']
     if not file:
         return '{ "result" : -1, "msg" : "missing parameters"}'
-    fixed_path = sanatize_path(request.json['path'])
+    fixed_path = sanitize_path(request.json['path'])
     file = secure_filename(file)
     full_path = os.path.join(app.config['UPLOAD_FOLDER'] + "/" + str(user), fixed_path)
     full_path = os.path.join(full_path, file)
@@ -304,7 +304,7 @@ def update():
     if request.json['op'] == 'rename':
         old_file = secure_filename(request.json['old_file'])
         new_file = secure_filename(request.json['new_file'])
-        path = sanatize_path(request.json['path'])
+        path = sanitize_path(request.json['path'])
         folder_path = os.path.join(current_user.get_folder(), path)
         full_path = os.path.join(folder_path, old_file)
         if not os.path.exists(full_path):
@@ -316,8 +316,8 @@ def update():
         return '{ "result" : 1, "msg" : "renamed file"}'
     elif request.json['op'] == 'move':
         file = secure_filename(request.json['file'])
-        new_path = sanatize_path(request.json['new_path'])
-        old_path = sanatize_path(request.json['old_path'])
+        new_path = sanitize_path(request.json['new_path'])
+        old_path = sanitize_path(request.json['old_path'])
         folder_path = os.path.join(current_user.get_folder(), old_path)
         full_path = os.path.join(folder_path, file)
         new_folder_path = os.path.join(current_user.get_folder(), new_path)
@@ -338,12 +338,12 @@ def update():
 @login_required
 def directory(path):
     if request.method == 'POST':
-        path = sanatize_path(path)
+        path = sanitize_path(path)
         path = os.path.join(current_user.get_folder(), path)
         os.makedirs(path)
         return '{ "result" : 1, "msg" : "created path"}'
     else:
-        path = sanatize_path(path)
+        path = sanitize_path(path)
         path = os.path.join(current_user.get_folder(), path)
         try:
             os.rmdir(path)
@@ -371,7 +371,7 @@ def hash_file(path):
     input = str(data) + str(os.stat(path).st_size) + str(current_user.username)
     return str(hashlib.sha1(str(input)).hexdigest())
 
-def sanatize_path(path):
+def sanitize_path(path):
     if path.startswith('/'):
         return path[1:]
     else:

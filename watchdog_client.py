@@ -36,14 +36,16 @@ class myEventHandler(FileSystemEventHandler):
         #not syncing empty directories serverside atm
         if self.onedir.cookies is None or not self.onedir.autosyncstatus():
             return
-
+        source = event.src_path
         if event.is_directory:
-            pass
-            #try:
-            #    os.makedirs(copyTo)
-            #except OSError as e:
-             #   if e.errno != errno.EEXIST:
-              #      raise
+            try:
+                pathtoonedir = self.onedir.getonedirrectory()
+                relpath =  source.replace(pathtoonedir ,"")
+                print relpath
+                self.onedir.senddirectory(relpath)
+            except Exception as e:
+                print "Error syncing directory" + e
+                exit(1)
         else:
             source = event.src_path
             try:
@@ -123,15 +125,17 @@ class myEventHandler(FileSystemEventHandler):
         if self.onedir.cookies is None or not self.onedir.autosyncstatus():
             return
 
+        source = event.src_path
         if event.is_directory:
-            pass
-            #try:
-            #    os.makedirs(copyTo)
-            #except OSError as e:
-             #   if e.errno != errno.EEXIST:
-              #      raise
+            try:
+                pathtoonedir = self.onedir.getonedirrectory()
+                relpath =  source.replace(pathtoonedir ,"")
+                print relpath
+                self.onedir.deldirectory(relpath)
+            except Exception as e:
+                print "Error syncing directory" + e
+                exit(1)
         else:
-            source = event.src_path
             try:
                 #use os.path.split to get file name and path
                 splitpath = split(source)
