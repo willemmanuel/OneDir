@@ -1,68 +1,76 @@
+import tkMessageBox as messagebox
+import Tkinter as tk
 from oneDirConnection import OneDirConnection
-try:
-    import tkinter as tk
-except ImportError:
-    import Tkinter as tk
 
-# from http://effbot.org/tkinterbook/entry.htm
-oneDir = OneDirConnection('http://127.0.0.1:5000/', '/Users/Will/Desktop/client')
-def make_entry(parent, caption, width=None, **options):
-    tk.Label(parent, text=caption).pack(side=tk.TOP)
-    entry = tk.Entry(parent, **options)
-    if width:
-        entry.config(width=width)
-    entry.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
-    return entry
+class Login:
+    def __init__(self, master, oneDir):
+        self.oneDir = oneDir
+        self.master = master
+        self.frame = tk.Frame(self.master, padx=10, pady=10)
+        tk.Label(self.frame, text="Welcome to OneDir", height=2).pack(side=tk.TOP)
+        tk.Label(self.frame, text="Username").pack(side=tk.TOP)
+        self.user = tk.Entry(self.frame)
+        self.user.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
+        tk.Label(self.frame, text="Password").pack(side=tk.TOP)
+        self.password = tk.Entry(self.frame, show="*")
+        self.password.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
+        self.error = tk.Label(self.frame, text="Incorrect combination", fg="red")
+        b = tk.Button(self.frame, borderwidth=4, text="Login", width=10, pady=8, command=self.check_password)
+        b.pack(side=tk.BOTTOM)
+        self.password.bind('<Return>', self.enter)
+        self.frame.pack(fill=tk.BOTH, expand=True)
 
-def enter(event):
-    check_password()
+    def enter(self, event):
+        self.check_password()
 
-def check_password():
-    """ Collect 1's for every failure and quit program in case of failure_max failures """
-    if oneDir.login(user.get(), password.get()) == 1:
-        root.destroy()
-        print('Logged in')
-        return
-    else:
-        error.pack(side=tk.TOP)
+    def check_password(self):
+        if self.oneDir.login(self.user.get(), self.password.get()) == 1:
+            Settings(self.master, self.oneDir)
+            self.frame.destroy()
+        else:
+            self.error.pack(side=tk.TOP)
 
-root = tk.Tk()
-root.geometry('200x250')
-root.title('OneDir')
-#frame for window margin
-parent = tk.Frame(root, padx=10, pady=10)
-parent.pack(fill=tk.BOTH, expand=True)
-#entrys with not shown text
-tk.Label(parent, text="Welcome to OneDir", height=2).pack(side=tk.TOP)
-user = make_entry(parent, "User name:", 16)
-password = make_entry(parent, "Password:", 16, show="*")
-error = tk.Label(parent, text="Incorrect combination", fg="red")
-#button to attempt to login
-b = tk.Button(parent, borderwidth=4, text="Login", width=10, pady=8, command=check_password)
-b.pack(side=tk.BOTTOM)
-password.bind('<Return>', enter)
-user.focus_set()
-parent.mainloop()
+class Settings:
+    def __init__(self, master, oneDir):
+        self.oneDir = oneDir
+        self.master = master
+        self.frame = tk.Frame(self.master)
+        t = "Welcome, " + self.oneDir.user + "!"
+        tk.Label(self.frame, text=t).pack(side=tk.TOP)
+        self.toggle_autosync_button = tk.Button(self.frame, text = 'Disable autosync', width = 25, command = self.toggle_autosync)
+        self.toggle_autosync_button.pack()
+        self.change_password_button = tk.Button(self.frame, text = 'Change password', width = 25, command = self.change_password)
+        self.change_password_button.pack()
+        self.quitButton = tk.Button(self.frame, text = 'Quit', width = 25, command = self.close_windows)
+        self.quitButton.pack()
+        messagebox.showinfo(message='Logged in successfully!')
+        self.frame.pack()
 
-# Need to use views!
-# import Tkinter as tk
-#
-# class View(tk.Frame):
-#     count = 0
-#     def __init__(self, *args, **kwargs):
-#         tk.Frame.__init__(self, *args, **kwargs)
-#         b = tk.Button(self, text="Open new window", command=self.new_window)
-#         b.pack(side="top")
-#
-#     def new_window(self):
-#         self.count += 1
-#         id = "New window #%s" % self.count
-#         window = tk.Toplevel(self)
-#         label = tk.Label(window, text=id)
-#         label.pack(side="top", fill="both", padx=10, pady=10)
-#
-# if __name__ == "__main__":
-#     root = tk.Tk()
-#     view = View(root)
-#     view.pack(side="top", fill="both", expand=True)
-#     root.mainloop()
+    def toggle_autosync(self):
+        if self.oneDir.autosync:
+            messagebox.showinfo(message='Turning autosync off')
+            self.toggle_autosync_button['text'] = 'Enable autosync'
+            self.oneDir.disableautosync()
+        else:
+            messagebox.showinfo(message='Turning autosync on')
+            self.toggle_autosync_button['text'] = 'Disable autosync'
+            self.oneDir.enableautosync()
+
+    def change_password(self):
+        print "button clicked"
+
+    def close_windows(self):
+        ans = messagebox.askyesno(message='Are you sure you want to quit?', icon='question', title='Logout')
+        if ans:
+            self.master.destroy()
+
+def main():
+    oneDir = OneDirConnection('http://127.0.0.1:5000/', '/Users/Will/Desktop/client')
+    root = tk.Tk()
+    root.geometry('200x250')
+    root.title('OneDir')
+    app = Login(root, oneDir)
+    root.mainloop()
+
+if __name__ == '__main__':
+    main()

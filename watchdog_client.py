@@ -19,10 +19,6 @@ import hashlib
 #hidden files bork out shutil may need to write custom handler for that
 #files can be deleted before being copies i.e. some temp files
 
-USER = 'OneDir'
-PASS = 'test'
-
-
 class myEventHandler(FileSystemEventHandler):
     """Copies changes in the source folder to the folder copiedTo in the user's home directory"""
     def __init__(self,connection):
