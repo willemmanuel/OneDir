@@ -18,11 +18,11 @@ app = Flask(__name__)
 app.secret_key = 'super-secret-key'
 
 # Will's settings
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////user/Will/test.db'
-# UPLOAD_FOLDER = '/Users/Will/Desktop/uploads/'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Will/test.db'
+UPLOAD_FOLDER = '/Users/Will/Desktop/uploads/'
 #Chris's settings
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/christopher/serverside/test.db'
-UPLOAD_FOLDER = '/home/christopher/serverside/onedir'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/christopher/serverside/test.db'
+# UPLOAD_FOLDER = '/home/christopher/serverside/onedir'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
 
@@ -351,6 +351,30 @@ def directory(path):
         except:
             return '{ "result" : -1, "msg" : "path not empty"}'
         return '{ "result" : 1, "msg" : "destroyed path"}'
+
+@app.route('/directory', methods=['PUT'])
+@login_required
+def rename_directory():
+    old_path = sanitize_path(request.json['old_path'])
+    new_path = sanitize_path(request.json['new_path'])
+    folder_path = os.path.join(current_user.get_folder(), old_path)
+    new_folder_path = os.path.join(current_user.get_folder(), new_path)
+    if os.path.exists(new_folder_path):
+        return '{ "result" : -1, "msg" : "folder already exists"}'
+    if not os.path.exists(folder_path):
+        return '{ "result" : -1, "msg" : "folder does not exist"}'
+    files = File.query.filter_by(username=current_user.username, path=old_path).all()
+    for f in files:
+        if f.path.startswith(old_path):
+            f.path = f.path.replace(old_path, new_path)
+    try:
+        os.rename(folder_path, new_folder_path)
+        db.session.commit()
+        return '{ "result" : 1, "msg" : "folder renamed"}'
+    except Exception as e:
+        print e
+        return '{ "result" : -1, "msg" : "problem renaming folder"}'
+
 
 @app.route('/session', methods=['DELETE'])
 def logout():

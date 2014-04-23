@@ -9,7 +9,6 @@ import time
 import httplib
 class OneDirConnection:
     """Class to facilitate managing network communication between the oneDir client and server."""
-
     def __init__(self, host, direct):
         """Constructor which setsup the host the server is at"""
         self.host = host
@@ -33,7 +32,6 @@ class OneDirConnection:
             return 1
         else:
             return -1
-
     def login(self, username, password):
         """Login to the oneDir server saving the cookie internally to preserve session"""
         url = self.host + "session"
@@ -46,20 +44,17 @@ class OneDirConnection:
             return 1
         else:
             return -1
-
     def changepassword(self, password):
         url = self.host + 'change_password'
         headers = {'Content-Type': 'application/json'}
         data = {'password': password}
         results = requests.put(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
         self.logout()
-
     def admin_changepassword(self, user, password):
         url = self.host + 'admin/change_password'
         headers = {'Content-Type': 'application/json'}
         data = {'user' : user, 'password': password}
         results = requests.put(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
-
     def sendfile(self, file, path):
         """Sends a file to the OneDir server using the internal cookie stored inside"""
         if path == "" or path == "/":
@@ -81,7 +76,6 @@ class OneDirConnection:
             return -1
         else:
             return 1
-
     def deletefile(self,file,path):
         """Send a request to the server to delete a file the user has removed"""
         url = self.host + 'file'
@@ -94,7 +88,6 @@ class OneDirConnection:
             return -1
         else:
             return 1
-
     def getfile(self, file):
         """Gets a file from the OneDir server using the internal cookie stored inside"""
         path = self.sanitize_path(file['path'])
@@ -130,7 +123,6 @@ class OneDirConnection:
             return json.loads(results.text)['files']
         except:
             return None
-
     def admin_list(self):
         url = self.host + 'admin/list'
         results = requests.get(url, cookies=self.cookies)
@@ -144,7 +136,6 @@ class OneDirConnection:
         data = {'user': user, 'path': path, 'file': file}
         result = requests.delete(url, cookies=self.cookies, headers=headers, data=json.dumps(data))
         print result.text
-
     def logout(self):
         """Logout from the oneDir api server"""
         url = self.host + "session"
@@ -215,7 +206,6 @@ class OneDirConnection:
             data = f.read()
         input = str(data) + str(os.stat(path).st_size) + str(self.user)
         return hashlib.sha1(str(input)).hexdigest()
-
     def make_path(self, file):
         path = self.sanitize_path(file['path'])
         if path != '':
@@ -236,9 +226,18 @@ class OneDirConnection:
         url = self.host + 'directory/' + path
         results = requests.delete(url, cookies=self.cookies)
         return results.text
+    def renamedirectory(self, old_path, new_path):
+        if old_path[0] == '/':
+            old_path = old_path[1:]
+        if new_path[0] == '/':
+            new_path = new_path[1:]
+        url = self.host + 'directory'
+        headers = {'Content-Type': 'application/json'}
+        data = {'old_path' : old_path, 'new_path' : new_path}
+        result = requests.put(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
+        return result.json['result']
     def exists(self, file):
         return os.path.isfile(self.make_path(file))
-
     def sanitize_path(self, path):
         if path.startswith('/'):
             return str(path[1:])

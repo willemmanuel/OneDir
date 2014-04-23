@@ -32,7 +32,6 @@ class TestServer(TestCase):
     def test_get_file(self):
         url = HOST + "file/test/test_upload.txt"
         r = requests.get(url, cookies=self.cookies)
-        print r.text
         self.assertEqual(r.text, "UploadTest")
         url = HOST + "file/fake_file.txt"
         r = requests.get(url, cookies=self.cookies)
@@ -115,4 +114,14 @@ class TestServer(TestCase):
         r = requests.post(url, headers=headers, cookies=self.cookies)
         self.assertEquals(r.json()['result'], 1)
         r = requests.delete(url, headers=headers, cookies=self.cookies)
+        self.assertEquals(r.json()['result'], 1)
+
+    def test_directory_rename(self):
+        url = HOST + 'directory'
+        headers = {'Content-Type' : 'application/json'}
+        data = {'old_path' : '/test', 'new_path' : '/test2'}
+        r = requests.put(url, headers=headers, cookies=self.cookies, data=json.dumps(data))
+        self.assertEquals(r.json()['result'], 1)
+        data = {'old_path' : '/test2', 'new_path' : '/test'}
+        r = requests.put(url, headers=headers, cookies=self.cookies, data=json.dumps(data))
         self.assertEquals(r.json()['result'], 1)
