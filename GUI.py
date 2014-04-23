@@ -1,6 +1,10 @@
 import tkMessageBox as messagebox
 import Tkinter as tk
+import os
+from os.path import expanduser
 from oneDirConnection import OneDirConnection
+from watchdog.observers import Observer
+from watchdog_client import myEventHandler
 
 class Login:
     def __init__(self, master, oneDir):
@@ -43,11 +47,13 @@ class Settings:
         self.change_password_button.pack()
         self.quitButton = tk.Button(self.frame, text = 'Quit', width = 25, command = self.close_windows)
         self.quitButton.pack()
-        messagebox.showinfo(message='Logged in successfully!')
+        messagebox.showinfo(message='Logged in successfully! Syncing now')
+        self.oneDir.enableautosync()
+        self.oneDir.full_sync()
         self.frame.pack()
 
     def toggle_autosync(self):
-        if self.oneDir.autosync:
+        if self.oneDir.autosyncstatus():
             messagebox.showinfo(message='Turning autosync off')
             self.toggle_autosync_button['text'] = 'Enable autosync'
             self.oneDir.disableautosync()
@@ -65,12 +71,21 @@ class Settings:
             self.master.destroy()
 
 def main():
-    oneDir = OneDirConnection('http://127.0.0.1:5000/', '/Users/Will/Desktop/client')
+    host = 'http://127.0.0.1:5000/'
+    # home = expanduser("~")
+    # oneDir = os.path.join(home,'onedir')
+    dir = '/Users/Will/Desktop/client'
+    client = OneDirConnection('http://127.0.0.1:5000/', '/Users/Will/Desktop/client')
+    event_handler = myEventHandler(client)
+    observer = Observer()
+    observer.schedule(event_handler, dir, recursive=True)
+    observer.start()
     root = tk.Tk()
     root.geometry('200x250')
     root.title('OneDir')
-    app = Login(root, oneDir)
+    app = Login(root, client)
     root.mainloop()
+
 
 if __name__ == '__main__':
     main()
