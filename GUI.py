@@ -21,12 +21,14 @@ class Login:
         self.error = tk.Label(self.frame, text="Incorrect combination", fg="red")
         b = tk.Button(self.frame, borderwidth=4, text="Login", width=10, pady=8, command=self.check_password)
         b.pack(side=tk.BOTTOM)
+        c = tk.Button(self.frame, borderwidth=4, text="Sign Up", width=10, pady=8, command=self.new_user)
+        c.pack(side=tk.BOTTOM)
         self.password.bind('<Return>', self.enter)
         self.frame.pack(fill=tk.BOTH, expand=True)
 
     def enter(self, event):
         self.check_password()
-
+        newUserWindow=tk.Frame
     def check_password(self):
         try:
             if self.oneDir.login(self.user.get(), self.password.get()) == 1:
@@ -38,6 +40,8 @@ class Login:
         except:
             self.error['text'] = "Cannot connect to server"
             self.error.pack(side=tk.TOP)
+    def new_user(self):
+        NewUser(self.master, self.oneDir)
 
 class Settings:
     def __init__(self, master, oneDir):
@@ -68,18 +72,39 @@ class Settings:
             self.oneDir.enableautosync()
 
     def change_password(self):
-        print "button clicked"
+        print 'Someone needs to tell me how to log on'
 
     def close_windows(self):
         ans = messagebox.askyesno(message='Are you sure you want to quit?', icon='question', title='Logout')
         if ans:
             self.master.destroy()
+class NewUser:
+     def __init__(self, master, oneDir):
+        self.master = master
+        self.oneDir = oneDir
+        self.frame = tk.Toplevel(self.master)
+        tk.Label(self.frame, text="Welcome, New User", height=2).pack(side=tk.TOP)
+        tk.Label(self.frame, text="New Username").pack(side=tk.TOP)
+        self.user = tk.Entry(self.frame)
+        self.user.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
+        tk.Label(self.frame, text="New Password").pack(side=tk.TOP)
+        self.password = tk.Entry(self.frame, show="*")
+        self.password.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
+        tk.Label(self.frame, text="Your Email").pack(side=tk.TOP)
+        self.email = tk.Entry(self.frame)
+        self.email.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
+        self.error = tk.Label(self.frame, text="Someone else chose this combination", fg="red")
+        c = tk.Button(self.frame, borderwidth=4, text="Sign Up", width=10, pady=8, command=self.new_user)
+        c.pack(side=tk.BOTTOM)
+     def new_user(self):
+        self.oneDir.register(self.user.get(), self.password.get(), self.email.get())
+
 
 def main():
     host = 'http://127.0.0.1:5000/'
-    # home = expanduser("~")
-    # oneDir = os.path.join(home,'onedir')
-    dir = '/Users/Will/Desktop/client'
+    #home = expanduser("~")
+    #oneDir = os.path.join(home,'onedir')
+    dir = '/Users/'
     client = OneDirConnection('http://127.0.0.1:5000/', '/Users/Will/Desktop/client')
     event_handler = myEventHandler(client)
     observer = Observer()
