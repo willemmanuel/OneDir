@@ -227,15 +227,13 @@ class OneDirConnection:
         results = requests.delete(url, cookies=self.cookies)
         return results.text
     def renamedirectory(self, old_path, new_path):
-        if old_path[0] == '/':
-            old_path = old_path[1:]
-        if new_path[0] == '/':
-            new_path = new_path[1:]
         url = self.host + 'directory'
         headers = {'Content-Type': 'application/json'}
         data = {'old_path' : old_path, 'new_path' : new_path}
         result = requests.put(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
-        return result.json['result']
+        print result
+        return 1
+        #return result.json['result']
     def exists(self, file):
         return os.path.isfile(self.make_path(file))
     def sanitize_path(self, path):

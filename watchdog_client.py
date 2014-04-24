@@ -64,7 +64,34 @@ class myEventHandler(FileSystemEventHandler):
         source = event.src_path
         dest =  event.dest_path
         if event.is_directory:
-            pass
+            splitpath = split(source)
+            splitdest = split(dest)
+            if splitpath[1] == splitdest[1]:
+                    try:
+                        #where are we moving from
+                        pass
+                        #file = splitpath[1]
+                        #pathtoonedir = self.onedir.getonedirrectory()
+                        #oldpath =  splitpath[0].replace(pathtoonedir ,"")
+                        #calculate new path
+                        #newpath =  splitdest[0].replace(pathtoonedir ,"")
+                        #if oldpath is "":
+                        #    oldpath = os.path.sep
+                        #self.onedir.movefile(file,newpath,oldpath)
+                    except OSError as e:
+                        print "Error copying file! " + e
+                        exit(1)
+            else:
+                    #rename!!!!!!!!
+                    oldname = source
+                    newname = dest
+                    pathtoonedir = self.onedir.getonedirrectory()
+                    oldname = oldname.replace(pathtoonedir ,"")
+                    newname = newname.replace(pathtoonedir ,"")
+                    print "rename"
+                    print oldname
+                    print newname
+                    self.onedir.renamedirectory(oldname,newname)
         else:
             #if it comes from outside the folder structure
             if source is None:
