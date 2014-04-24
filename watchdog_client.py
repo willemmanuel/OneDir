@@ -152,7 +152,17 @@ class myEventHandler(FileSystemEventHandler):
         """Handles modifications to prexisting files and directories in the source folder"""
         super(myEventHandler,self).on_modified(event)
         if event.is_directory:
-            pass
+            try:
+                source = event.src_path
+                dest = event.src_dest
+                pathtoonedir = self.onedir.getonedirrectory()
+                source =  source.replace(pathtoonedir ,"")
+                dest =  dest.replace(pathtoonedir ,"")
+                print source, dest
+                self.onedir.renamedirectory(source, dest)
+            except Exception as e:
+                print e
+                exit(1)
         else:
             source = event.src_path
             try:

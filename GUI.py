@@ -28,10 +28,15 @@ class Login:
         self.check_password()
 
     def check_password(self):
-        if self.oneDir.login(self.user.get(), self.password.get()) == 1:
-            Settings(self.master, self.oneDir)
-            self.frame.destroy()
-        else:
+        try:
+            if self.oneDir.login(self.user.get(), self.password.get()) == 1:
+                Settings(self.master, self.oneDir)
+                self.frame.destroy()
+            else:
+                self.error['text'] = "Incorrect combination"
+                self.error.pack(side=tk.TOP)
+        except:
+            self.error['text'] = "Cannot connect to server"
             self.error.pack(side=tk.TOP)
 
 class Settings:

@@ -156,6 +156,8 @@ def upload_file(path):
         return '{ "result" : -1, "msg" : "unsafe path"}'
     if not file:
         return '{ "result" : -1, "msg" : "file not uploaded"}'
+    if file.filename.startswith('.'):
+        return '{ "result" : -1, "msg" : ". files not accepted"}'
     filename = secure_filename(file.filename)
     full_path = os.path.join(current_user.get_folder(), path)
     if not os.path.exists(full_path):
