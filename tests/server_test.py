@@ -21,10 +21,12 @@ class TestServer(TestCase):
         url = HOST + "file/test"
         headers = {'Content-Type': 'application/json'}
         r = requests.post(url, files={'file': open('test_upload.txt', 'rb')}, cookies=self.cookies)
+        print r.text
         self.assertEqual(r.json()['result'], 1)
         url = HOST + "file"
         headers = {'Content-Type': 'application/json'}
         r = requests.post(url, files={'file': open('test_upload.txt', 'rb')}, cookies=self.cookies)
+        print r.text
         self.assertEqual(r.json()['result'], 1)
         r = requests.post(url, files={'file': open('test_update.txt', 'rb')}, cookies=self.cookies)
         self.assertEqual(r.json()['result'], 1)
@@ -101,10 +103,10 @@ class TestServer(TestCase):
     def test_rename(self):
         url = HOST + 'file'
         headers = {'Content-Type': 'application/json'}
-        data = {'op':'rename', 'old_file' : 'test_update.txt', 'path' : '/', 'new_file' : 'test_update2.txt'}
+        data = {'op':'rename', 'old_file' : 'test_update.txt', 'path' : '', 'new_file' : 'test_update2.txt'}
         r = requests.put(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
         self.assertEquals(r.json()['result'], 1)
-        data = {'op':'rename', 'old_file' : 'test_update2.txt', 'path' : '/', 'new_file' : 'test_update.txt'}
+        data = {'op':'rename', 'old_file' : 'test_update2.txt', 'path' : '', 'new_file' : 'test_update.txt'}
         r = requests.put(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
         self.assertEquals(r.json()['result'], 1)
 

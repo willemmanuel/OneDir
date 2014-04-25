@@ -14,7 +14,6 @@ class OneDirConnection:
         self.host = host
         self.cookies = None
         self.user = None
-        home = expanduser("~")
         self.onedirrectory = direct
         self.autosync = False
     def getonedirrectory(self):
@@ -170,6 +169,8 @@ class OneDirConnection:
             for f in self.filelist:
                 path = self.sanitize_path(f['path'])
                 path = os.path.join(self.onedirrectory, path)
+                print path
+                print self.exists(f)
                 if not os.path.exists(path):
                     os.makedirs(path)
                 if not self.exists(f):
@@ -196,24 +197,30 @@ class OneDirConnection:
                     self.sendfile(f, d)
                     self.synced.append(path)
     def hash_file(self, file):
+        print file
         path = self.sanitize_path(file['path'])
+        # if not root directory
         if path:
             path = os.path.join(self.onedirrectory, path)
             path = os.path.join(path, file['name'])
         else:
             path = os.path.join(self.onedirrectory, file['name'])
+
+        print path
         with open(path, 'rb') as f:
             data = f.read()
         input = str(data) + str(os.stat(path).st_size) + str(self.user)
         return hashlib.sha1(str(input)).hexdigest()
+
     def make_path(self, file):
         path = self.sanitize_path(file['path'])
-        if path != '':
+        if path:
             path = os.path.join(self.onedirrectory, path)
-            path = os.path.join(self.onedirrectory, file['name'])
+            path = os.path.join(path, file['name'])
             return str(path)
         else:
             return str(os.path.join(self.onedirrectory, file['name']))
+
     def senddirectory(self,path):
         if path[0] == '/':
             path = path[1:]
@@ -234,8 +241,10 @@ class OneDirConnection:
         print result
         return 1
         #return result.json['result']
+
     def exists(self, file):
         return os.path.isfile(self.make_path(file))
+
     def sanitize_path(self, path):
         if path.startswith('/'):
             return str(path[1:])

@@ -104,8 +104,8 @@ def main():
     host = 'http://127.0.0.1:5000/'
     #home = expanduser("~")
     #oneDir = os.path.join(home,'onedir')
-    dir = '/Users/'
-    client = OneDirConnection('http://127.0.0.1:5000/', '/Users/Will/Desktop/client')
+    dir = '/home/wre9fz/client'
+    client = OneDirConnection('http://127.0.0.1:5000/', '/home/wre9fz/client')
     event_handler = myEventHandler(client)
     observer = Observer()
     observer.schedule(event_handler, dir, recursive=True)

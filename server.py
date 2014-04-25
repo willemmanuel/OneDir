@@ -21,8 +21,10 @@ app.secret_key = 'super-secret-key'
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Will/test.db'
 #UPLOAD_FOLDER = '/Users/Will/Desktop/uploads/'
 #Chris's settings
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/christopher/serverside/test.db'
-UPLOAD_FOLDER = '/home/christopher/serverside/onedir'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/christopher/serverside/test.db'
+# UPLOAD_FOLDER = '/home/christopher/serverside/onedir'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/wre9fz/test.db'
+UPLOAD_FOLDER = '/home/wre9fz/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
 
@@ -166,7 +168,7 @@ def upload_file(path):
     file.save(full_path)
     file_hash = hash_file(full_path)
     entry = File(current_user.username, file.filename, path, file_hash, datetime.datetime.utcnow())
-    dupe = File.query.filter_by(user=current_user, path=path, name=filename).first()
+    dupe = File.query.filter_by(user=current_user, path=sanitize_path(path), name=filename).first()
     if dupe:
         db.session.delete(dupe)
     db.session.add(entry)
@@ -186,7 +188,7 @@ def delete():
     full_path = os.path.join(full_path, file)
     if not os.path.exists(full_path):
         return '{ "result" : -1, "msg" : "file does not exist"}'
-    entry = File.query.filter_by(path=path, name=file, user=current_user).filter().first()
+    entry = File.query.filter_by(path=sanitize_path(path), name=file, user=current_user).filter().first()
     if entry:
         db.session.delete(entry)
     db.session.commit()
@@ -213,7 +215,7 @@ def admin_delete():
     if not os.path.exists(full_path):
         return '{ "result" : -1, "msg" : "file does not exist"}'
     user = User.query.filter_by(username=user).first()
-    entry = File.query.filter_by(path=path, name=file, user=user).filter().first()
+    entry = File.query.filter_by(path=sanitize_path(path), name=file, user=user).filter().first()
     if entry:
         db.session.delete(entry)
     db.session.commit()
@@ -233,8 +235,8 @@ def upload_no_path():
     full_path = os.path.join(current_user.get_folder(), filename)
     file.save(full_path)
     file_hash = hash_file(full_path)
-    entry = File(current_user.username, file.filename, '/', file_hash, datetime.datetime.utcnow())
-    dupe = File.query.filter_by(user=current_user, path='/', name=filename).first()
+    entry = File(current_user.username, file.filename, '', file_hash, datetime.datetime.utcnow())
+    dupe = File.query.filter_by(user=current_user, path='', name=filename).first()
     if dupe:
         db.session.delete(dupe)
     db.session.add(entry)
@@ -307,11 +309,12 @@ def update():
         old_file = secure_filename(request.json['old_file'])
         new_file = secure_filename(request.json['new_file'])
         path = sanitize_path(request.json['path'])
+        print old_file, new_file, path
         folder_path = os.path.join(current_user.get_folder(), path)
         full_path = os.path.join(folder_path, old_file)
         if not os.path.exists(full_path):
             return '{ "result" : -1, "msg" : "file does not exist"}'
-        entry = File.query.filter_by(path=request.json['path'], name=old_file, user=current_user).filter().first()
+        entry = File.query.filter_by(path=path, name=old_file, user=current_user).filter().first()
         entry.name = new_file
         os.rename(full_path, os.path.join(folder_path, new_file))
         db.session.commit()
@@ -328,8 +331,8 @@ def update():
             return '{ "result" : -1, "msg" : "file does not exist"}'
         if not os.path.exists(new_folder_path):
             os.makedirs(new_folder_path)
-        entry = File.query.filter_by(path=request.json['old_path'], name=file, user=current_user).filter().first()
-        entry.path = request.json['new_path']
+        entry = File.query.filter_by(path=sanitize_path(request.json['old_path']), name=file, user=current_user).filter().first()
+        entry.path = sanitize_path(request.json['new_path'])
         os.rename(full_path, new_full_path)
         db.session.commit()
         return '{ "result" : 1, "msg" : "moved file"}'

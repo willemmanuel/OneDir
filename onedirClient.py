@@ -139,8 +139,8 @@ def main():
     host = 'http://127.0.0.1:5000/'
     #setup default onedir path
     home = expanduser("~")
-    # oneDir = '/Users/Will/Desktop/client'
-    oneDir = os.path.join(home,'onedir')
+    oneDir = '/home/wre9fz/client'
+    #oneDir = os.path.join(home,'onedir')
     client = OneDirConnection(host,oneDir)
     #Watchdog setup:
     event_handler = myEventHandler(client)
