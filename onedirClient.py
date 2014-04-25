@@ -62,9 +62,8 @@ def prompt(oneDir):
 def mainprompt(oneDir, pathtoonedir):
         """Main prompt once user has logged in"""
         try:
-            pass
-            #r = syncthread(oneDir)
-            #r.start()
+            r = syncthread(oneDir)
+            r.start()
         except:
             print "Error: unable to start thread"
 

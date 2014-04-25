@@ -96,7 +96,13 @@ class OneDirConnection:
             path = os.path.join(file['name'])
         url = self.host + 'file/' + path
         results = requests.get(url, cookies=self.cookies)
-        return results.text
+        print results
+        try:
+            if results.json()['result'] == -1:
+                return False, None
+        except:
+            return True, results.text
+        
     def movefile(self,file,newpath,oldpath):
         """move a file already in the directory to another location on the server"""
         url = self.host + 'file'
@@ -174,10 +180,11 @@ class OneDirConnection:
                 if not os.path.exists(path):
                     os.makedirs(path)
                 if not self.exists(f):
-                    data = self.getfile(f)
-                    with open(self.make_path(f), 'a') as new_file:
-                        new_file.write(data)
-                        new_file.close()
+                    exists, data = self.getfile(f)
+                    if exists:
+                        with open(self.make_path(f), 'a') as new_file:
+                            new_file.write(data)
+                            new_file.close()
                 elif str(self.hash_file(f)) != str(f['hash']):
                     self.sendfile(f['name'], f['path'])
                 if self.make_path(f) not in self.synced:
@@ -222,8 +229,7 @@ class OneDirConnection:
             return str(os.path.join(self.onedirrectory, file['name']))
 
     def senddirectory(self,path):
-        if path[0] == '/':
-            path = path[1:]
+        path = self.sanitize_path(path)
         url = self.host + 'directory/' + path
         results = requests.post(url, cookies=self.cookies)
         return results.text

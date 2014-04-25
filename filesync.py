@@ -15,21 +15,27 @@ class syncthread(threading.Thread):
         print "stopping!"
     def half_sync(self,delay):
             """don't resync files deleted from server"""
+            self.count = 1
             while not self.shutdown:
                 time.sleep(delay)
+                self.count += 1
                 self.filelist = self.loggedin.list()
                 self.synced = []
+                print self.filelist
                 if self.filelist:
                     for f in self.filelist:
                         path = self.loggedin.sanitize_path(f['path'])
                         path = os.path.join(self.onedirrectory, path)
+                        print path
+                        print self.loggedin.exists(f)
                         if not os.path.exists(path):
                             os.makedirs(path)
                         if not self.loggedin.exists(f):
-                            data = self.loggedin.getfile(f)
-                            with open(self.loggedin.make_path(f), 'a') as new_file:
-                                new_file.write(data)
-                                new_file.close()
+                            exists, data = self.loggedin.getfile(f)
+                            if exists:
+                                with open(self.loggedin.make_path(f), 'a') as new_file:
+                                    new_file.write(data)
+                                    new_file.close()
                         elif str(self.loggedin.hash_file(f)) != str(f['hash']):
                             self.loggedin.sendfile(f['name'], f['path'])
                         if self.loggedin.make_path(f) not in self.synced:
