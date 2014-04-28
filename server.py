@@ -18,13 +18,11 @@ app = Flask(__name__)
 app.secret_key = 'super-secret-key'
 
 # Will's settings
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Will/test.db'
-#UPLOAD_FOLDER = '/Users/Will/Desktop/uploads/'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Will/test.db'
+UPLOAD_FOLDER = '/Users/Will/Desktop/uploads/'
 #Chris's settings
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/christopher/serverside/test.db'
 # UPLOAD_FOLDER = '/home/christopher/serverside/onedir'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/wre9fz/test.db'
-UPLOAD_FOLDER = '/home/wre9fz/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 db = SQLAlchemy(app)
 
@@ -347,6 +345,7 @@ def directory(path):
         path = os.path.join(current_user.get_folder(), path)
         if not os.path.isdir(path):
             os.makedirs(path)
+        #dir = File(current_user.username, '', path, '', datetime.datetime.utcnow())
         return '{ "result" : 1, "msg" : "created path"}'
     else:
         path = sanitize_path(path)
