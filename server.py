@@ -8,6 +8,7 @@ import hashlib
 from werkzeug.utils import secure_filename
 import os
 import datetime
+from logging.handlers import RotatingFileHandler
 import shutil
 from os.path import isdir
 # from sqlalchemy import create_engine
@@ -19,7 +20,7 @@ app.secret_key = 'super-secret-key'
 
 # Will's settings
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Will/test.db'
-UPLOAD_FOLDER = '/Users/Will/Desktop/uploads/'
+UPLOAD_FOLDER = '/Users/Will/Desktop/uploads'
 #Chris's settings
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/christopher/serverside/test.db'
 # UPLOAD_FOLDER = '/home/christopher/serverside/onedir'
@@ -95,15 +96,18 @@ def load_user(userid):
 
 @app.errorhandler(404)
 def not_found(error):
+    app.logger.info('User 404\'d at ' + str(datetime.datetime.utcnow()))
     return '{ "result" : -1, "msg" : "resource not found"}'
 
 @login_manager.unauthorized_handler
 def unauthorized():
+    app.logger.info('Unauthorized resource access attempted at ' + str(datetime.datetime.utcnow()))
     return '{ "result" : -2, "msg" : "unathorized"}'
 
 @app.route('/list', methods=['GET'])
 @login_required
 def list():
+    app.logger.info(current_user.username + " asked for a list of all files at " + str(datetime.datetime.utcnow()))
     files = File.query.filter_by(username=current_user.username).all()
     if not files:
         return ""
@@ -121,6 +125,7 @@ def list():
 @app.route('/admin/list', methods=['GET'])
 @login_required
 def admin_list():
+    app.logger.info("admin asked for a list of all files at " + str(datetime.datetime.utcnow()))
     if current_user.username != 'admin':
         return '{ "result" : -2, "msg" : "unathorized"}'
     files = File.query.all()
@@ -141,6 +146,7 @@ def admin_list():
 @login_required
 def get_file(filename):
     full_filename = os.path.join(current_user.get_folder(), filename)
+    app.logger.info("serving " + current_user.username + full_filename + " at " + str(datetime.datetime.utcnow()))
     if not os.path.exists(full_filename):
         return '{ "result" : -1, "msg" : "file does not exist"}'
     else:
@@ -159,6 +165,7 @@ def upload_file(path):
     if file.filename.startswith('.'):
         return '{ "result" : -1, "msg" : ". files not accepted"}'
     filename = secure_filename(file.filename)
+    app.logger.info(current_user.username + " is uploading " + filename + " at " + str(datetime.datetime.utcnow()))
     full_path = os.path.join(current_user.get_folder(), path)
     if not os.path.exists(full_path):
         os.makedirs(full_path)
@@ -178,6 +185,7 @@ def upload_file(path):
 def delete():
     file = request.json['file']
     path = request.json['path']
+    app.logger.info(current_user.username + " is deleting " + file + " at " + str(datetime.datetime.utcnow()))
     if not file:
         return '{ "result" : -1, "msg" : "missing parameters"}'
     fixed_path = sanitize_path(request.json['path'])
@@ -204,6 +212,7 @@ def admin_delete():
     file = request.json['file']
     path = request.json['path']
     user = request.json['user']
+    app.logger.info("admin is deleting " + file + " owned by " + user + " at " + str(datetime.datetime.utcnow()))
     if not file:
         return '{ "result" : -1, "msg" : "missing parameters"}'
     fixed_path = sanitize_path(request.json['path'])
@@ -230,6 +239,7 @@ def upload_no_path():
     if not file:
         return '{ "result" : -1, "msg" : "file not uploaded"}'
     filename = secure_filename(file.filename)
+    app.logger.info(current_user.username + " is uploading " + filename + " at " + str(datetime.datetime.utcnow()))
     full_path = os.path.join(current_user.get_folder(), filename)
     file.save(full_path)
     file_hash = hash_file(full_path)
@@ -244,6 +254,7 @@ def upload_no_path():
 @app.route('/register', methods=['POST'])
 def register():
     username, password, email = str(request.json['username']), str(request.json['password']), str(request.json['email'])
+    app.logger.info(username + " registered at " + str(datetime.datetime.utcnow()))
     if not username or not password or not email:
         return '{ "result" : -1, "msg" : "missing parameters"}'
     try:
@@ -265,6 +276,7 @@ def login():
         return '{ "result" : -1, "msg" : "missing parameters"}'
     username = request.json['username']
     password = request.json['password']
+    app.logger.info(username + " logged in at " + str(datetime.datetime.utcnow()))
     hash = hashlib.sha256(password).hexdigest()
     registered_user = User.query.filter_by(username=username,password=hash).first()
     if registered_user is None:
@@ -278,6 +290,7 @@ def change_password():
     if not request.json['password']:
         return '{ "result" : -1, "msg" : "missing parameters"}'
     password = request.json['password']
+    app.logger.info(current_user.username + " changed password at " + str(datetime.datetime.utcnow()))
     hash = hashlib.sha256(password).hexdigest()
     current_user.password = hash
     db.session.commit()
@@ -293,6 +306,7 @@ def admin_change_password():
         return '{ "result" : -1, "msg" : "missing parameters"}'
     password = request.json['password']
     user = request.json['user']
+    app.logger.info("admin changed " + user + "'s password at " + str(datetime.datetime.utcnow()))
     hash = hashlib.sha256(password).hexdigest()
     user = User.query.filter_by(username=user).first()
     user.password = hash
@@ -307,6 +321,7 @@ def update():
         old_file = secure_filename(request.json['old_file'])
         new_file = secure_filename(request.json['new_file'])
         path = sanitize_path(request.json['path'])
+        app.logger.info(current_user.username + " renamed "+ old_file + " at " + str(datetime.datetime.utcnow()))
         print old_file, new_file, path
         folder_path = os.path.join(current_user.get_folder(), path)
         full_path = os.path.join(folder_path, old_file)
@@ -321,6 +336,7 @@ def update():
         file = secure_filename(request.json['file'])
         new_path = sanitize_path(request.json['new_path'])
         old_path = sanitize_path(request.json['old_path'])
+        app.logger.info(current_user.username + " moved " + file + " at " + str(datetime.datetime.utcnow()))
         folder_path = os.path.join(current_user.get_folder(), old_path)
         full_path = os.path.join(folder_path, file)
         new_folder_path = os.path.join(current_user.get_folder(), new_path)
@@ -343,6 +359,7 @@ def directory(path):
     if request.method == 'POST':
         path = sanitize_path(path)
         path = os.path.join(current_user.get_folder(), path)
+        app.logger.info(current_user.username + " made directory  "+ path + " at " + str(datetime.datetime.utcnow()))
         if not os.path.isdir(path):
             os.makedirs(path)
         #dir = File(current_user.username, '', path, '', datetime.datetime.utcnow())
@@ -350,6 +367,7 @@ def directory(path):
     else:
         path = sanitize_path(path)
         path = os.path.join(current_user.get_folder(), path)
+        app.logger.info(current_user.username + " deleted directory  "+ path + " at " + str(datetime.datetime.utcnow()))
         try:
             os.rmdir(path)
         except:
@@ -361,6 +379,7 @@ def directory(path):
 def rename_directory():
     old_path = sanitize_path(request.json['old_path'])
     new_path = sanitize_path(request.json['new_path'])
+    app.logger.info(current_user.username + " renamed directory  "+ old_path + " at " + str(datetime.datetime.utcnow()))
     folder_path = os.path.join(current_user.get_folder(), old_path)
     new_folder_path = os.path.join(current_user.get_folder(), new_path)
     print folder_path
@@ -385,6 +404,7 @@ def rename_directory():
 
 @app.route('/session', methods=['DELETE'])
 def logout():
+    app.logger.info(current_user.username + " logged out at " + str(datetime.datetime.utcnow()))
     if current_user:
             r = '{ "result" : "' + str(current_user.username) + '", "msg" : "logged out"}'
             logout_user()
@@ -411,5 +431,5 @@ def sanitize_path(path):
 
 if __name__ == '__main__':
     # manager.run()
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(filename='/Users/Will/Desktop/OneDir/OneDir.txt', level=logging.DEBUG)
     app.run(threaded=True)
