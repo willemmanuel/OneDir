@@ -21,7 +21,7 @@ app.secret_key = 'super-secret-key'
 # Will's settings
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////cslab/home/jcf5xh/Desktop/OneDir/test.db'
 UPLOAD_FOLDER = '/cslab/home/jcf5xh/Desktop/uploads'
-#Chris's settings
+# Chris's settings
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/christopher/serverside/test.db'
 # UPLOAD_FOLDER = '/home/christopher/serverside/onedir'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
