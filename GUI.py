@@ -1,11 +1,13 @@
 import tkMessageBox as messagebox
 import Tkinter as tk
+from ago import human
 import os
 from os.path import expanduser
 import tkFileDialog as fdialog
 from oneDirConnection import OneDirConnection
 from watchdog.observers import Observer
 from watchdog_client import myEventHandler
+import datetime
 
 class Login:
     def __init__(self, master, oneDir):
@@ -51,7 +53,7 @@ class Settings:
         self.master = master
         self.frame = tk.Frame(self.master)
         t = "Welcome, " + self.oneDir.user + "!"
-        self.master.geometry('200x150')
+        self.master.geometry('200x200')
         tk.Label(self.frame, text=t).pack(side=tk.TOP)
         self.toggle_autosync_button = tk.Button(self.frame, text = 'Disable autosync', width = 25, command = self.toggle_autosync)
         self.toggle_autosync_button.pack()
@@ -60,11 +62,20 @@ class Settings:
         self.change_password_button.pack()
         self.change_directory_button = tk.Button(self.frame, text = 'Change OneDir path', width = 25, command = self.change_directory)
         self.change_directory_button.pack()
+        self.list_files = tk.Button(self.frame, text = 'List server files', width = 25, command = self.list)
+        self.list_files.pack()
+        self.update = tk.Button(self.frame, text = 'Force update', width = 25, command = self.sync)
+        self.update.pack()
         self.quitButton = tk.Button(self.frame, text = 'Quit', width = 25, command = self.close_windows)
         self.quitButton.pack()
         self.oneDir.enableautosync()
         self.oneDir.full_sync()
         self.frame.pack()
+    def list(self):
+        List(self.master, self.oneDir)
+
+    def sync(self):
+        self.oneDir.full_sync()
 
     def change_directory(self):
         path = fdialog.askdirectory()
@@ -147,12 +158,59 @@ class ChangePassword:
 
         self.frame.destroy()
 
+class List:
+    def __init__(self, master, oneDir):
+        self.oneDir = oneDir
+        self.master = master
+        self.frame = tk.Toplevel(self.master)
+        if self.oneDir.user == 'admin':
+            self.list = self.oneDir.admin_list()
+        else:
+            self.list = self.oneDir.list()
+        print self.list
+        self.entries = {}
+        counter = 1
+        tk.Label(self.frame, text="User").grid(row = 1, column=1)
+        tk.Label(self.frame, text="File").grid(row = 1, column=2)
+        tk.Label(self.frame, text="Path").grid(row = 1, column=3)
+        tk.Label(self.frame, text="Modified").grid(row = 1, column=4)
+        tk.Label(self.frame, text="Delete").grid(row = 1, column=5)
+        tk.Label(self.frame, text="Share").grid(row = 1, column=6)
+        count = 2
+        for f in self.list:
+            tk.Label(self.frame, text=f['username']).grid(row = count, column=1)
+            tk.Label(self.frame, text=f['name']).grid(row = count, column=2)
+            tk.Label(self.frame, text='/' + f['path']).grid(row = count, column=3)
+            modified = human(datetime.datetime.strptime(f['modified'], '%Y-%m-%d %H:%M:%S.%f'), precision=2, past_tense='in {}', future_tense='{} ago')
+            tk.Label(self.frame, text=modified).grid(row = count, column=4)
+            tk.Button(self.frame, borderwidth=4, text="Delete", width=10, pady=8, command=lambda count=count: self.delete(count)).grid(row=count, column=5)
+            tk.Button(self.frame, borderwidth=4, text="Share", width=10, pady=8, command=lambda count=count: self.share(count)).grid(row=count, column=6)
+            count += 1
+
+    def delete(self, count):
+        count -= 2
+        f = self.list[count]
+        if self.oneDir.user == 'admin':
+            self.oneDir.admin_delete(f['username'], f['name'], f['path'])
+        else:
+            self.oneDir.deletefile(f['name'], f['path'])
+            full_path = os.path.join(self.oneDir.getonedirrectory(), self.oneDir.sanitize_path(f['path']))
+            full_path = os.path.join(full_path, f['name'])
+            os.remove(full_path)
+        List(self.master, self.oneDir)
+        self.frame.destroy()
+
+    def share(self, count):
+        count -= 2
+        f = self.list[count]
+        print f
+
 def main():
     host = 'http://127.0.0.1:5000/'
     #home = expanduser("~")
     #oneDir = os.path.join(home,'onedir')
     dir = '/Users/Will/Desktop/client'
-    client = OneDirConnection('http://127.0.0.1:5000/', '/home/wre9fz/client')
+    client = OneDirConnection('http://127.0.0.1:5000/', '/Users/Will/Desktop/client')
     event_handler = myEventHandler(client)
     observer = Observer()
     observer.schedule(event_handler, dir, recursive=True)

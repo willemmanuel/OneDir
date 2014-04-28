@@ -81,7 +81,6 @@ class OneDirConnection:
         path = self.sanitize_path(path)
         headers = {'Content-Type': 'application/json'}
         data = {'file' : file, 'path' : path}
-        print "file:" + file + " path: " + path
         results = requests.delete(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
         if results.json()['result'] == -1:
             return -1
@@ -124,6 +123,7 @@ class OneDirConnection:
     def list(self):
         url = self.host + 'list'
         results = requests.get(url, cookies=self.cookies)
+        print "here " + results.text
         try:
             return json.loads(results.text)['files']
         except:
@@ -170,7 +170,7 @@ class OneDirConnection:
         """sync thefiles between the server and client"""
         self.filelist = self.list()
         self.synced = []
-        print self.filelist
+        print "files ", self.filelist
         if self.filelist:
             for f in self.filelist:
                 path = self.sanitize_path(f['path'])
@@ -191,6 +191,7 @@ class OneDirConnection:
                     self.synced.append(self.make_path(f))
         os_walk = os.walk(self.onedirrectory)
         for directory in os_walk:
+            print directory
             if os.listdir(directory[0]) == []:
                 e = directory[0].replace(self.onedirrectory, "")
                 self.senddirectory(e)
