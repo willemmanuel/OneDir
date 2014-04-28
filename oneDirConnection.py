@@ -173,7 +173,6 @@ class OneDirConnection:
         headers = {'Content-Type': 'application/json'}
         data = {'user': user, 'path': path, 'file': file}
         result = requests.delete(url, cookies=self.cookies, headers=headers, data=json.dumps(data))
-        print result.text
     def logout(self):
         """Logout from the oneDir api server"""
         url = self.host + "session"
@@ -200,26 +199,22 @@ class OneDirConnection:
         """Check whether user is logged in currently"""
         return self.cookies is not None
     def full_sync(self):
-        """sync thefiles between the server and client"""
         self.filelist = self.list()
         self.shared_file_list = self.shared_list()
         self.synced = []
-        print "files ", self.filelist
         if self.filelist:
             for f in self.filelist:
                 path = self.sanitize_path(f['path'])
                 path = os.path.join(self.onedirrectory, path)
-                print path
-                print self.exists(f)
                 if not os.path.exists(path):
-                    os.makedirs(path)
-                if not self.exists(f):
+                    os.makedirs(path)   
+                if f['name'] and not self.exists(f):
                     exists, data = self.getfile(f)
                     if exists:
                         with open(self.make_path(f), 'a') as new_file:
                             new_file.write(data)
                             new_file.close()
-                elif str(self.hash_file(f)) != str(f['hash']):
+                elif f['name'] and str(self.hash_file(f)) != str(f['hash']):
                     self.sendfile(f['name'], f['path'])
                 if self.make_path(f) not in self.synced:
                     self.synced.append(self.make_path(f))
@@ -227,7 +222,8 @@ class OneDirConnection:
         for directory in os_walk:
             if os.listdir(directory[0]) == []:
                 e = directory[0].replace(self.onedirrectory, "")
-                self.senddirectory(e)
+                if not e not in self.synced:
+                    self.senddirectory(e)
                 print e
             for f in directory[2]:
                 if f.startswith('.'):
@@ -253,7 +249,6 @@ class OneDirConnection:
                         new_file.write(data)
                         new_file.close()
     def hash_file(self, file):
-        print file
         path = self.sanitize_path(file['path'])
         # if not root directory
         if path:
@@ -261,8 +256,6 @@ class OneDirConnection:
             path = os.path.join(path, file['name'])
         else:
             path = os.path.join(self.onedirrectory, file['name'])
-
-        print path
         with open(path, 'rb') as f:
             data = f.read()
         input = str(data) + str(os.stat(path).st_size) + str(self.user)
@@ -291,7 +284,6 @@ class OneDirConnection:
         headers = {'Content-Type': 'application/json'}
         data = {'old_path' : old_path, 'new_path' : new_path}
         result = requests.put(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
-        print result
         return 1
         #return result.json['result']
     def exists(self, file):

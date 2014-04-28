@@ -37,7 +37,6 @@ class myEventHandler(FileSystemEventHandler):
             try:
                 pathtoonedir = self.onedir.getonedirrectory()
                 relpath =  source.replace(pathtoonedir ,"")
-                print relpath
                 self.onedir.senddirectory(relpath)
             except Exception as e:
                 print "Error syncing directory" + e
@@ -88,9 +87,6 @@ class myEventHandler(FileSystemEventHandler):
                     pathtoonedir = self.onedir.getonedirrectory()
                     oldname = oldname.replace(pathtoonedir ,"")
                     newname = newname.replace(pathtoonedir ,"")
-                    print "rename"
-                    print oldname
-                    print newname
                     self.onedir.renamedirectory(oldname,newname)
         else:
             #if it comes from outside the folder structure
@@ -100,9 +96,6 @@ class myEventHandler(FileSystemEventHandler):
                     splitpath = split(dest)
                     file = splitpath[1]
                     pathtoonedir = self.onedir.getonedirrectory()
-                    #print pathtoonedir
-                    #print splitpath[0]
-                    #print "truncated path:"
                     relpath =  splitpath[0].replace(pathtoonedir ,"")
                     self.onedir.sendfile(file, relpath)
                 except OSError as e:
@@ -153,7 +146,6 @@ class myEventHandler(FileSystemEventHandler):
             try:
                 pathtoonedir = self.onedir.getonedirrectory()
                 relpath =  source.replace(pathtoonedir ,"")
-                print relpath
                 self.onedir.deldirectory(relpath)
             except Exception as e:
                 print "Error syncing directory" + e
@@ -185,7 +177,6 @@ class myEventHandler(FileSystemEventHandler):
                 pathtoonedir = self.onedir.getonedirrectory()
                 source =  source.replace(pathtoonedir ,"")
                 dest =  dest.replace(pathtoonedir ,"")
-                print source, dest
                 self.onedir.renamedirectory(source, dest)
             except Exception as e:
                 print e
@@ -195,8 +186,6 @@ class myEventHandler(FileSystemEventHandler):
             try:
                 #use os.path.split to get file name and path
                 splitpath = split(source)
-                for i in splitpath:
-                    print i
                 file = splitpath[1]
                 if file.startswith('.'):
                     return

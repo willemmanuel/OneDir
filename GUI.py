@@ -177,7 +177,6 @@ class List:
             self.list = self.oneDir.admin_list()
         else:
             self.list = self.oneDir.list()
-        print self.list
         self.entries = {}
         counter = 1
         tk.Label(self.frame, text="User").grid(row = 1, column=1)

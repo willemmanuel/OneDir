@@ -140,7 +140,7 @@ def list():
 def get_shared_list():
     app.logger.info(current_user.username + " asked for a list of shared files at " + str(datetime.datetime.utcnow()))
     shared = FileShare.query.filter_by(shared_with=current_user.username).all()
-    if not shared:
+    if len(shared) <= 0:
         return ""
     json_string = '{"files":['
     first = True

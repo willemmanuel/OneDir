@@ -10,9 +10,9 @@ class syncthread(threading.Thread):
         self.onedirrectory = self.loggedin.getonedirrectory()
         self.shutdown  = False
     def run(self):
-        print "start"
+        print "Starting sync thread"
         self.half_sync(10)
-        print "stopping!"
+        print "Stopping sync thread"
     def half_sync(self,delay):
             """don't resync files deleted from server"""
             self.count = 1
@@ -20,23 +20,21 @@ class syncthread(threading.Thread):
                 time.sleep(delay)
                 self.count += 1
                 self.filelist = self.loggedin.list()
+                print "Pinged server for changes"
                 self.synced = []
-                print self.filelist
                 if self.filelist:
                     for f in self.filelist:
                         path = self.loggedin.sanitize_path(f['path'])
                         path = os.path.join(self.onedirrectory, path)
-                        print path
-                        print self.loggedin.exists(f)
                         if not os.path.exists(path):
                             os.makedirs(path)
-                        if not self.loggedin.exists(f):
+                        if f['name'] and not self.loggedin.exists(f):
                             exists, data = self.loggedin.getfile(f)
                             if exists:
                                 with open(self.loggedin.make_path(f), 'a') as new_file:
                                     new_file.write(data)
                                     new_file.close()
-                        elif str(self.loggedin.hash_file(f)) != str(f['hash']):
+                        elif f['name'] and str(self.loggedin.hash_file(f)) != str(f['hash']):
                             self.loggedin.sendfile(f['name'], f['path'])
                         if self.loggedin.make_path(f) not in self.synced:
                             self.synced.append(self.loggedin.make_path(f))
@@ -51,3 +49,4 @@ class syncthread(threading.Thread):
                                 os.remove(path)
                             except OSError, e:
                                 print ("Error: %s - %s." % (e.filename,e.strerror))
+
