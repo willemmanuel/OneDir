@@ -11,9 +11,9 @@ import datetime
 from logging.handlers import RotatingFileHandler
 import shutil
 from os.path import isdir
-# from sqlalchemy import create_engine
-# from flask.ext.migrate import Migrate, MigrateCommand
-# from flask.ext.script import Manager
+from sqlalchemy import create_engine
+from flask.ext.migrate import Migrate, MigrateCommand
+from flask.ext.script import Manager
 
 app = Flask(__name__)
 app.secret_key = 'super-secret-key'
@@ -87,6 +87,19 @@ class File(db.Model):
         user = User.query.filter_by(username=self.username).first()
         return str(user.get_folder()) + "/" + self.relative_path()
 
+class FileShare(db.Model):
+    __tablename__ = 'fileshares'
+    shared_by = db.Column('shared_by',db.String(20), ForeignKey("users.username"), primary_key=True)
+    shared_with = db.Column('shared_with',db.String(20), ForeignKey("users.username"), primary_key=True)
+    name = db.Column('name', db.String(30), primary_key=True)
+    path = db.Column('path', db.String(128), primary_key=True)
+
+    def __init__(self, shared_by , shared_with, name, path):
+        self.shared_by = shared_by
+        self.shared_with = shared_with
+        self.name = name
+        self.path = path
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -121,6 +134,69 @@ def list():
         first = False
     json_string += "]}"
     return json_string
+
+@app.route('/share/list', methods=['GET'])
+@login_required
+def get_shared_list():
+    app.logger.info(current_user.username + " asked for a list of shared files at " + str(datetime.datetime.utcnow()))
+    shared = FileShare.query.filter_by(shared_with=current_user.username).all()
+    if not shared:
+        return ""
+    json_string = '{"files":['
+    first = True
+    for s in shared:
+        f = File.query.filter_by(shared_by=s.shared_by, name=s.name, path=s.path).first()
+        if not first:
+            json_string += ","
+        json_string += '{"username":"' + str(f.username) + '", "name":"' + str(f.name) + '", "path":"' +\
+                       str(f.path) + '", "hash":"' + str(f.hash) + '", "modified":"' + str(f.modified) + '"}'
+        first = False
+    json_string += "]}"
+    return json_string
+
+@app.route('/share', methods=['GET'])
+@login_required
+def get_shared_file(filename):
+    username, name, path = str(request.json['username']), str(request.json['file']), sanitize_path(str(request.json['path']))
+    s = FileShare.query.filter_by(shared_by=username, name=name, path=path).first()
+    if not s:
+        return '{ "result" : -1, "msg" : "file not shared"}'
+    full_filename = app.config['UPLOAD_FOLDER'] + "/" + username
+    full_filename = os.path.join(full_filename, path)
+    full_filename = os.path.join(full_filename, name)
+    app.logger.info("serving " + current_user.username + full_filename + " at " + str(datetime.datetime.utcnow()))
+    if not os.path.exists(full_filename):
+        return '{ "result" : -1, "msg" : "file does not exist"}'
+    else:
+        with open(full_filename, "rb") as in_file:
+            read = in_file.read()
+        return read
+
+@app.route('/share', methods=['POST'])
+@login_required
+def add_shared_file():
+    username, name, path = str(request.json['username']), str(request.json['file']), sanitize_path(str(request.json['path']))
+    app.logger.info(current_user.username + " sharing file with " + username + " at " + str(datetime.datetime.utcnow()))
+    share = FileShare(current_user.username, username, name, path)
+    db.session.add(share)
+    try:
+        db.session.commit()
+        return '{ "result" : 1, "msg" : "file shared"}'
+    except:
+        return '{ "result" : -1, "msg" : "file not shared"}'
+
+@app.route('/share', methods=['DELETE'])
+@login_required
+def remove_shared_file():
+    username, name, path = str(request.json['username']), str(request.json['file']), sanitize_path(str(request.json['path']))
+    app.logger.info(current_user.username + " unsharing file with " + username + " at " + str(datetime.datetime.utcnow()))
+    share = FileShare(current_user.username, username, name, path)
+    db.session.delete(share)
+    try:
+        db.session.commit()
+        return '{ "result" : 1, "msg" : "file shared"}'
+    except:
+        return '{ "result" : -1, "msg" : "file not shared"}'
 
 @app.route('/admin/list', methods=['GET'])
 @login_required
@@ -401,7 +477,6 @@ def rename_directory():
         print e
         return '{ "result" : -1, "msg" : "problem renaming folder"}'
 
-
 @app.route('/session', methods=['DELETE'])
 def logout():
     app.logger.info(current_user.username + " logged out at " + str(datetime.datetime.utcnow()))
@@ -431,5 +506,6 @@ def sanitize_path(path):
 
 if __name__ == '__main__':
     # manager.run()
-    logging.basicConfig(filename='/Users/Will/Desktop/OneDir/OneDir.txt', level=logging.DEBUG)
+    # logging.basicConfig(filename='/Users/Will/Desktop/OneDir/OneDir.txt', level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG)
     app.run(threaded=True)

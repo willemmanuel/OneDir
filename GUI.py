@@ -64,7 +64,7 @@ class Settings:
         self.change_directory_button.pack()
         self.list_files = tk.Button(self.frame, text = 'List server files', width = 25, command = self.list)
         self.list_files.pack()
-        self.update = tk.Button(self.frame, text = 'Force update', width = 25, command = self.sync)
+        self.update = tk.Button(self.frame, text = 'Force sync', width = 25, command = self.sync)
         self.update.pack()
         self.quitButton = tk.Button(self.frame, text = 'Quit', width = 25, command = self.close_windows)
         self.quitButton.pack()
@@ -125,6 +125,8 @@ class NewUser:
             if self.oneDir.register(self.user.get(), self.password.get(), self.email.get()) == -1:
                     self.error['text'] = "User/password not unique"
                     self.error.pack(side=tk.TOP)
+            else:
+                self.frame.destroy()
         except:
             self.error['text'] = "Cannot connect to server"
             self.error.pack(side=tk.TOP)
