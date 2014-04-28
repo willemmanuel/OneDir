@@ -72,7 +72,7 @@ class Settings:
             self.oneDir.enableautosync()
 
     def change_password(self):
-        print 'Someone needs to tell me how to log on'
+        ChangePassword(self.master, self.oneDir)
 
     def close_windows(self):
         ans = messagebox.askyesno(message='Are you sure you want to quit?', icon='question', title='Logout')
@@ -98,14 +98,26 @@ class NewUser:
         c.pack(side=tk.BOTTOM)
      def new_user(self):
         self.oneDir.register(self.user.get(), self.password.get(), self.email.get())
-
+class ChangePassword:
+     def __init__(self, master, oneDir):
+        self.master = master
+        self.oneDir = oneDir
+        self.frame = tk.Toplevel(self.master)
+        tk.Label(self.frame, text="Change Password", height=2).pack(side=tk.TOP)
+        self.password = tk.Entry(self.frame, show="*")
+        self.password.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
+        self.error = tk.Label(self.frame, text="Someone else chose this combination", fg="red")
+        c = tk.Button(self.frame, borderwidth=4, text="Sign Up", width=10, pady=8, command=self.new_user)
+        c.pack(side=tk.BOTTOM)
+     def new_user(self):
+        self.oneDir.changePassword(self.password.get())
 
 def main():
     host = 'http://127.0.0.1:5000/'
     #home = expanduser("~")
     #oneDir = os.path.join(home,'onedir')
-    dir = '/home/wre9fz/client'
-    client = OneDirConnection('http://127.0.0.1:5000/', '/home/wre9fz/client')
+    dir = '/Users/Lenovo/Documents'
+    client = OneDirConnection('http://127.0.0.1:5000/', '/home/jcf5xh/client')
     event_handler = myEventHandler(client)
     observer = Observer()
     observer.schedule(event_handler, dir, recursive=True)
