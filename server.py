@@ -19,8 +19,8 @@ app = Flask(__name__)
 app.secret_key = 'super-secret-key'
 
 # Will's settings
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Will/test.db'
-UPLOAD_FOLDER = '/Users/Will/Desktop/uploads'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////cslab/home/jcf5xh/Desktop/OneDir/test.db'
+UPLOAD_FOLDER = '/cslab/home/jcf5xh/Desktop/uploads'
 #Chris's settings
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/christopher/serverside/test.db'
 # UPLOAD_FOLDER = '/home/christopher/serverside/onedir'
@@ -434,20 +434,24 @@ def update():
 @app.route('/directory/<path:path>', methods=['POST', 'DELETE'])
 @login_required
 def directory(path):
+    rel_path = sanitize_path(path)
+    path = os.path.join(current_user.get_folder(), path)
     if request.method == 'POST':
-        path = sanitize_path(path)
-        path = os.path.join(current_user.get_folder(), path)
         app.logger.info(current_user.username + " made directory  "+ path + " at " + str(datetime.datetime.utcnow()))
         if not os.path.isdir(path):
             os.makedirs(path)
-        #dir = File(current_user.username, '', path, '', datetime.datetime.utcnow())
+        entry = File(current_user.username, '', rel_path, '', datetime.datetime.utcnow())
+        db.session.add(entry)
+        db.session.commit()
         return '{ "result" : 1, "msg" : "created path"}'
     else:
-        path = sanitize_path(path)
-        path = os.path.join(current_user.get_folder(), path)
         app.logger.info(current_user.username + " deleted directory  "+ path + " at " + str(datetime.datetime.utcnow()))
         try:
             os.rmdir(path)
+            entry = File.query.filter_by(path=rel_path, name='', user=current_user).filter().first()
+            if entry:
+                db.session.delete(entry)
+            db.session.commit()
         except:
             return '{ "result" : -1, "msg" : "path not empty"}'
         return '{ "result" : 1, "msg" : "destroyed path"}'

@@ -15,7 +15,7 @@ class OneDirConnection:
         self.cookies = None
         self.user = None
         self.onedirrectory = direct
-        self.autosync = False
+        self.autosync = True
     def getonedirrectory(self):
         """ask for the current onedir directory location for the user using this connection"""
         return self.onedirrectory
@@ -237,8 +237,7 @@ class OneDirConnection:
                     d = directory[0].replace(self.onedirrectory, "")
                     self.sendfile(f, d)
                     self.synced.append(path)
-
-        if not self.shared_list:
+        if not self.shared_file_list:
             return
         for f in self.shared_file_list:
             path = os.path.join(self.onedirrectory, 'shared')
@@ -253,7 +252,6 @@ class OneDirConnection:
                     with open(path, 'a') as new_file:
                         new_file.write(data)
                         new_file.close()
-
     def hash_file(self, file):
         print file
         path = self.sanitize_path(file['path'])
@@ -269,7 +267,6 @@ class OneDirConnection:
             data = f.read()
         input = str(data) + str(os.stat(path).st_size) + str(self.user)
         return hashlib.sha1(str(input)).hexdigest()
-
     def make_path(self, file):
         path = self.sanitize_path(file['path'])
         if path:
@@ -278,7 +275,6 @@ class OneDirConnection:
             return str(path)
         else:
             return str(os.path.join(self.onedirrectory, file['name']))
-
     def senddirectory(self,path):
         path = self.sanitize_path(path)
         url = self.host + 'directory/' + path
@@ -298,10 +294,8 @@ class OneDirConnection:
         print result
         return 1
         #return result.json['result']
-
     def exists(self, file):
         return os.path.isfile(self.make_path(file))
-
     def sanitize_path(self, path):
         if path.startswith('/'):
             return str(path[1:])

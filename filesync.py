@@ -16,7 +16,7 @@ class syncthread(threading.Thread):
     def half_sync(self,delay):
             """don't resync files deleted from server"""
             self.count = 1
-            while not self.shutdown:
+            while not self.shutdown and self.loggedin.autosync:
                 time.sleep(delay)
                 self.count += 1
                 self.filelist = self.loggedin.list()

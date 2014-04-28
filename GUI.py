@@ -8,6 +8,7 @@ from oneDirConnection import OneDirConnection
 from watchdog.observers import Observer
 from watchdog_client import myEventHandler
 import datetime
+from filesync import syncthread
 
 class Login:
     def __init__(self, master, oneDir):
@@ -35,7 +36,9 @@ class Login:
     def check_password(self):
         try:
             if self.oneDir.login(self.user.get(), self.password.get()) == 1:
-                Settings(self.master, self.oneDir)
+                thread = syncthread(self.oneDir)
+                thread.start()
+                Settings(self.master, self.oneDir, thread)
                 self.frame.destroy()
             else:
                 self.error['text'] = "Incorrect combination"
@@ -47,10 +50,11 @@ class Login:
         NewUser(self.master, self.oneDir)
 
 class Settings:
-    def __init__(self, master, oneDir):
+    def __init__(self, master, oneDir, thread):
         messagebox.showinfo(message='Logged in successfully! Syncing now')
         self.oneDir = oneDir
         self.master = master
+        self.thread = thread
         self.frame = tk.Frame(self.master)
         t = "Welcome, " + self.oneDir.user + "!"
         self.master.geometry('200x200')
@@ -89,10 +93,14 @@ class Settings:
             messagebox.showinfo(message='Turning autosync off')
             self.toggle_autosync_button['text'] = 'Enable autosync'
             self.oneDir.disableautosync()
+            self.thread.shutdown = True
         else:
             messagebox.showinfo(message='Turning autosync on')
             self.toggle_autosync_button['text'] = 'Disable autosync'
             self.oneDir.enableautosync()
+            self.oneDir.full_sync()
+            self.thread = syncthread(self.oneDir)
+            self.thread.start()
 
     def change_password(self):
         ChangePassword(self.master, self.oneDir)
@@ -100,6 +108,7 @@ class Settings:
     def close_windows(self):
         ans = messagebox.askyesno(message='Are you sure you want to quit?', icon='question', title='Logout')
         if ans:
+            self.thread.shutdown = True
             self.master.destroy()
 class NewUser:
      def __init__(self, master, oneDir):
@@ -182,7 +191,7 @@ class List:
             tk.Label(self.frame, text=f['username']).grid(row = count, column=1)
             tk.Label(self.frame, text=f['name']).grid(row = count, column=2)
             tk.Label(self.frame, text='/' + f['path']).grid(row = count, column=3)
-            modified = human(datetime.datetime.strptime(f['modified'], '%Y-%m-%d %H:%M:%S.%f'), precision=2, past_tense='{} ago', future_tense='in {}')
+            modified = human(datetime.datetime.strptime(f['modified'], '%Y-%m-%d %H:%M:%S.%f'), precision=2, past_tense='{}', future_tense='{}')
             tk.Label(self.frame, text=modified).grid(row = count, column=4)
             tk.Button(self.frame, borderwidth=4, text="Delete", width=10, pady=8, command=lambda count=count: self.delete(count)).grid(row=count, column=5)
             tk.Button(self.frame, borderwidth=4, text="Share", width=10, pady=8, command=lambda count=count: self.share(count)).grid(row=count, column=6)
@@ -229,8 +238,8 @@ def main():
     host = 'http://127.0.0.1:5000/'
     #home = expanduser("~")
     #oneDir = os.path.join(home,'onedir')
-    dir = '/Users/Will/Desktop/client'
-    client = OneDirConnection('http://127.0.0.1:5000/', '/Users/Will/Desktop/client')
+    dir = '/cslab/home/jcf5xh/Desktop/client'
+    client = OneDirConnection('http://127.0.0.1:5000/', '/cslab/home/jcf5xh/Desktop/client')
     event_handler = myEventHandler(client)
     observer = Observer()
     observer.schedule(event_handler, dir, recursive=True)
