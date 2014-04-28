@@ -56,6 +56,7 @@ class Settings:
         self.toggle_autosync_button = tk.Button(self.frame, text = 'Disable autosync', width = 25, command = self.toggle_autosync)
         self.toggle_autosync_button.pack()
         self.change_password_button = tk.Button(self.frame, text = 'Change password', width = 25, command = self.change_password)
+        self.admin_change_password_button = tk.Button(self.frame, text = 'admin password options', width = 25, command = self.change_password)
         self.change_password_button.pack()
         self.change_directory_button = tk.Button(self.frame, text = 'Change OneDir path', width = 25, command = self.change_directory)
         self.change_directory_button.pack()
@@ -105,11 +106,17 @@ class NewUser:
         tk.Label(self.frame, text="Your Email").pack(side=tk.TOP)
         self.email = tk.Entry(self.frame)
         self.email.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
-        self.error = tk.Label(self.frame, text="Someone else chose this combination", fg="red")
+        self.error = tk.Label(self.frame, text="User/password not unique", fg="red")
         c = tk.Button(self.frame, borderwidth=4, text="Sign Up", width=10, pady=8, command=self.new_user)
         c.pack(side=tk.BOTTOM)
      def new_user(self):
-        self.oneDir.register(self.user.get(), self.password.get(), self.email.get())
+        try:
+            if self.oneDir.register(self.user.get(), self.password.get(), self.email.get()) == -1:
+                    self.error['text'] = "User/password not unique"
+                    self.error.pack(side=tk.TOP)
+        except:
+            self.error['text'] = "Cannot connect to server"
+            self.error.pack(side=tk.TOP)
 
 class ChangePassword:
      def __init__(self, master, oneDir):
@@ -118,18 +125,26 @@ class ChangePassword:
         self.frame = tk.Toplevel(self.master)
         if self.oneDir.user == 'admin':
             tk.Label(self.frame, text="User").pack(side=tk.TOP)
-            self.user = tk.Entry(self.frame, show="*")
+            self.user = tk.Entry(self.frame)
             self.user.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
         tk.Label(self.frame, text="New Password").pack(side=tk.TOP)
         self.password = tk.Entry(self.frame, show="*")
         self.password.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
-        c = tk.Button(self.frame, borderwidth=4, text="Submit", width=10, pady=8, command=self.new_user)
+        c = tk.Button(self.frame, borderwidth=4, text="Submit", width=10, pady=8, command=self.change_password)
         c.pack(side=tk.BOTTOM)
-     def new_user(self):
+     def change_password(self):
         if self.oneDir.user == 'admin':
-            self.oneDir.admin_changepassword(self.user.get(), self.password.get())
-            return
-        self.oneDir.changepassword(self.password.get())
+            try:
+                self.oneDir.admin_changepassword(self.user.get(), self.password.get())
+                messagebox.showinfo(message='Password changed')
+            except:
+                messagebox.showinfo(message='Error changing password')
+        try:
+            self.oneDir.changepassword(self.password.get())
+            messagebox.showinfo(message='Password changed')
+        except:
+            messagebox.showinfo(message='Error changing password')
+
         self.frame.destroy()
 
 def main():
