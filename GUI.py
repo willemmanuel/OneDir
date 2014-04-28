@@ -58,7 +58,6 @@ class Settings:
         self.toggle_autosync_button = tk.Button(self.frame, text = 'Disable autosync', width = 25, command = self.toggle_autosync)
         self.toggle_autosync_button.pack()
         self.change_password_button = tk.Button(self.frame, text = 'Change password', width = 25, command = self.change_password)
-        self.admin_change_password_button = tk.Button(self.frame, text = 'admin password options', width = 25, command = self.change_password)
         self.change_password_button.pack()
         self.change_directory_button = tk.Button(self.frame, text = 'Change OneDir path', width = 25, command = self.change_directory)
         self.change_directory_button.pack()
@@ -183,7 +182,7 @@ class List:
             tk.Label(self.frame, text=f['username']).grid(row = count, column=1)
             tk.Label(self.frame, text=f['name']).grid(row = count, column=2)
             tk.Label(self.frame, text='/' + f['path']).grid(row = count, column=3)
-            modified = human(datetime.datetime.strptime(f['modified'], '%Y-%m-%d %H:%M:%S.%f'), precision=2, past_tense='in {}', future_tense='{} ago')
+            modified = human(datetime.datetime.strptime(f['modified'], '%Y-%m-%d %H:%M:%S.%f'), precision=2, past_tense='{} ago', future_tense='in {}')
             tk.Label(self.frame, text=modified).grid(row = count, column=4)
             tk.Button(self.frame, borderwidth=4, text="Delete", width=10, pady=8, command=lambda count=count: self.delete(count)).grid(row=count, column=5)
             tk.Button(self.frame, borderwidth=4, text="Share", width=10, pady=8, command=lambda count=count: self.share(count)).grid(row=count, column=6)
@@ -205,7 +204,26 @@ class List:
     def share(self, count):
         count -= 2
         f = self.list[count]
-        print f
+        ShareFile(self.master, self.oneDir, f)
+
+class ShareFile:
+     def __init__(self, master, oneDir, file):
+        self.master = master
+        self.oneDir = oneDir
+        self.file = file
+        self.frame = tk.Toplevel(self.master)
+        tk.Label(self.frame, text="User to share with").pack(side=tk.TOP)
+        self.user = tk.Entry(self.frame)
+        self.user.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
+        c = tk.Button(self.frame, borderwidth=4, text="Submit", width=10, pady=8, command=self.share_file)
+        c.pack(side=tk.BOTTOM)
+     def share_file(self):
+        try:
+            self.oneDir.postsharedfile(self.user.get(), self.file['name'], self.file['path'])
+            messagebox.showinfo(message='File shared')
+            self.frame.destroy()
+        except:
+            messagebox.showinfo(message='Error sharing file')
 
 def main():
     host = 'http://127.0.0.1:5000/'

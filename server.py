@@ -145,7 +145,7 @@ def get_shared_list():
     json_string = '{"files":['
     first = True
     for s in shared:
-        f = File.query.filter_by(shared_by=s.shared_by, name=s.name, path=s.path).first()
+        f = File.query.filter_by(username=s.shared_by, name=s.name, path=sanitize_path(s.path)).first()
         if not first:
             json_string += ","
         json_string += '{"username":"' + str(f.username) + '", "name":"' + str(f.name) + '", "path":"' +\
@@ -156,8 +156,8 @@ def get_shared_list():
 
 @app.route('/share', methods=['GET'])
 @login_required
-def get_shared_file(filename):
-    username, name, path = str(request.json['username']), str(request.json['file']), sanitize_path(str(request.json['path']))
+def get_shared_file():
+    username, name, path = str(request.json['username']), str(request.json['name']), sanitize_path(str(request.json['path']))
     s = FileShare.query.filter_by(shared_by=username, name=name, path=path).first()
     if not s:
         return '{ "result" : -1, "msg" : "file not shared"}'
@@ -175,7 +175,7 @@ def get_shared_file(filename):
 @app.route('/share', methods=['POST'])
 @login_required
 def add_shared_file():
-    username, name, path = str(request.json['username']), str(request.json['file']), sanitize_path(str(request.json['path']))
+    username, name, path = str(request.json['username']), str(request.json['name']), sanitize_path(str(request.json['path']))
     app.logger.info(current_user.username + " sharing file with " + username + " at " + str(datetime.datetime.utcnow()))
     share = FileShare(current_user.username, username, name, path)
     db.session.add(share)
@@ -240,6 +240,8 @@ def upload_file(path):
         return '{ "result" : -1, "msg" : "file not uploaded"}'
     if file.filename.startswith('.'):
         return '{ "result" : -1, "msg" : ". files not accepted"}'
+    if path.startswith('shared/'):
+        return '{ "result" : 1, "msg" : "skipping shared files"}'
     filename = secure_filename(file.filename)
     app.logger.info(current_user.username + " is uploading " + filename + " at " + str(datetime.datetime.utcnow()))
     full_path = os.path.join(current_user.get_folder(), path)

@@ -99,13 +99,11 @@ class OneDirConnection:
             path = os.path.join(file['name'])
         url = self.host + 'file/' + path
         results = requests.get(url, cookies=self.cookies)
-        print results
         try:
             if results.json()['result'] == -1:
                 return False, None
         except:
             return True, results.text
-        
     def movefile(self,file,newpath,oldpath):
         """move a file already in the directory to another location on the server"""
         if oldpath == 'shared':
@@ -135,42 +133,34 @@ class OneDirConnection:
             return json.loads(results.text)['files']
         except:
             return None
-
     def shared_list(self):
-        url = self.host + 'shared/list'
+        url = self.host + 'share/list'
         results = requests.get(url, cookies=self.cookies)
         try:
             return json.loads(results.text)['files']
         except:
             return None
-
     def getsharedfile(self, f):
         username, name, path = f['username'], f['name'], self.sanitize_path(f['path'])
         url = self.host + 'share'
         headers = {'Content-Type': 'application/json'}
         data = {'username':username, 'name' : name, 'path' : path}
         results = requests.get(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
-        if results.json()['result'] == -1:
-            #failureee
-            return -1
-        else:
-            #greatsuccess
-            return 1
-
-        # path = self.sanitize_path(file['path'])
-        # if path:
-        #     path = os.path.join(path, file['name'])
-        # else:
-        #     path = os.path.join(file['name'])
-        # url = self.host + 'file/' + path
-        # results = requests.get(url, cookies=self.cookies)
-        # print results
-        # try:
-        #     if results.json()['result'] == -1:
-        #         return False, None
-        # except:
-        #     return True, results.text
-
+        try:
+            if results.json()['result'] == -1:
+                return False, None
+        except:
+            return True, results.text
+    def postsharedfile(self, user, name, path):
+        url = self.host + 'share'
+        headers = {'Content-Type': 'application/json'}
+        data = {'username':user, 'name' : name, 'path' : path}
+        results = requests.post(url, headers=headers, data=json.dumps(data), cookies=self.cookies)
+        try:
+            if results.json()['result'] == -1:
+                return False, None
+        except:
+            return True, results.text
     def admin_list(self):
         url = self.host + 'admin/list'
         results = requests.get(url, cookies=self.cookies)
@@ -212,7 +202,7 @@ class OneDirConnection:
     def full_sync(self):
         """sync thefiles between the server and client"""
         self.filelist = self.list()
-        self.shared_list = self.shared_list()
+        self.shared_file_list = self.shared_list()
         self.synced = []
         print "files ", self.filelist
         if self.filelist:
@@ -247,20 +237,22 @@ class OneDirConnection:
                     d = directory[0].replace(self.onedirrectory, "")
                     self.sendfile(f, d)
                     self.synced.append(path)
-        for f in self.shared_list:
+
+        if not self.shared_list:
+            return
+        for f in self.shared_file_list:
             path = os.path.join(self.onedirrectory, 'shared')
             path = os.path.join(path, f['username'])
             path = os.path.join(path, self.sanitize_path(f['path']))
             if not os.path.exists(path):
                 os.makedirs(path)
-            if not self.exists(f):
+            path = os.path.join(path, f['name'])
+            if not os.path.exists(path):
                 exists, data = self.getsharedfile(f)
                 if exists:
-                    with open(self.make_path(f), 'a') as new_file:
+                    with open(path, 'a') as new_file:
                         new_file.write(data)
                         new_file.close()
-            if self.make_path(f) not in self.synced:
-                self.synced.append(self.make_path(f))
 
     def hash_file(self, file):
         print file
