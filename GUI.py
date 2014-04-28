@@ -53,7 +53,9 @@ class Settings:
         self.toggle_autosync_button = tk.Button(self.frame, text = 'Disable autosync', width = 25, command = self.toggle_autosync)
         self.toggle_autosync_button.pack()
         self.change_password_button = tk.Button(self.frame, text = 'Change password', width = 25, command = self.change_password)
+        self.admin_change_password_button = tk.Button(self.frame, text = 'admin password options', width = 25, command = self.change_password)
         self.change_password_button.pack()
+        self.admin_change_password_button.pack()
         self.quitButton = tk.Button(self.frame, text = 'Quit', width = 25, command = self.close_windows)
         self.quitButton.pack()
         messagebox.showinfo(message='Logged in successfully! Syncing now')
@@ -72,7 +74,10 @@ class Settings:
             self.oneDir.enableautosync()
 
     def change_password(self):
-        ChangePassword(self.master, self.oneDir)
+        if self.oneDir.getuser() in self.oneDir.admin_list():
+            AdminChangePassword(self.master, self.oneDir)
+        else:
+            ChangePassword(self.master, self.oneDir)
 
     def close_windows(self):
         ans = messagebox.askyesno(message='Are you sure you want to quit?', icon='question', title='Logout')
@@ -111,6 +116,23 @@ class ChangePassword:
         c.pack(side=tk.BOTTOM)
      def new_user(self):
         self.oneDir.changePassword(self.password.get())
+class AdminChangePassword:
+     def __init__(self, master, oneDir):
+        self.master = master
+        self.oneDir = oneDir
+        tk.Label(self.frame, text="Username", height=2).pack(side=tk.TOP)
+        self.frame = tk.Toplevel(self.master)
+        self.user = tk.Entry(self.frame)
+        self.user.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
+        tk.Label(self.frame, text="Change Password", height=2).pack(side=tk.TOP)
+        self.password = tk.Entry(self.frame, show="*")
+        self.password.pack(side=tk.TOP, padx=10, fill=tk.BOTH)
+        self.error = tk.Label(self.frame, text="Someone else chose this combination", fg="red")
+        c = tk.Button(self.frame, borderwidth=4, text="Change Password", width=10, pady=8, command=self.new_user)
+        c.pack(side=tk.BOTTOM)
+     def new_user(self):
+        self.oneDir.admin_changepassword(self.user.get(), self.password.get())
+
 
 def main():
     host = 'http://127.0.0.1:5000/'
